@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+
+files() {
+    find ../{src,test} -name '*.cpp' -o -name '*.hpp' -o -name CMakeLists.txt \
+	 | grep -vE '\.#|~$|#$'
+}
+
+mkdir -p build
+
+while true; do
+    (cd build \
+	 && inotifywait -e modify `files` \
+	 && make \
+	 && ctest --output-on-failure)
+done

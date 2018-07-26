@@ -1,0 +1,6 @@
+[submodule "vendor/doctest"]
+	path = vendor/doctest
+	url = https://github.com/onqtam/doctest.git
+[submodule "vendor/RxCpp"]
+	path = vendor/RxCpp
+	url = https://github.com/ReactiveX/RxCpp.git

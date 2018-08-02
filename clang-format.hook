@@ -1,0 +1,20 @@
+#! /bin/bash
+
+repoRoot=`git rev-parse --show-toplevel`
+clangFormatFile=${repoRoot}/.clang-format
+if [ -f ${clangFormatFile} ]; then
+    echo "${clangFormatFile} exist in repository"
+    git diff --staged --name-only --diff-filter=AMR | grep -E '\.cpp$|\.hpp$|\.h$' | while read subLine; do
+		line=${repoRoot}/${subLine}
+		if [ -L ${line} ] ; then
+			echo "Is a link - '${line}'"
+		else
+			echo "Clang-format - '${line}'"
+			clang-format -style=file -i ${line}
+			git add ${line}
+		fi
+    done
+    sleep 0.5
+else
+    echo "File .clang-format doesnt exist in the path"
+fi

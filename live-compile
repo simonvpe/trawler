@@ -1,15 +1,27 @@
 #!/usr/bin/env bash
+dir=`dirname $0`
+header_filter="`realpath $dir`/services/|`realpath $dir`/test/"
+clang_tidy="clang-tidy;-header-filter=$header_filter"
 
 files() {
-    find ../{src,test} -name '*.cpp' -o -name '*.hpp' -o -name CMakeLists.txt \
-	 | grep -vE '\.#|~$|#$'
+    find {services,test} \
+         -name '*.cpp' \
+         -o -name '*.hpp' \
+         -o -name CMakeLists.txt \
+         -o -name .clang-tidy \
+ 	 | grep -vE '\.#|~$|#$'
 }
 
 mkdir -p build
 
 while true; do
     (cd build \
-	 && inotifywait -e modify `files` \
-	 && make \
-	 && ctest --output-on-failure)
+         && cmake .. \
+		  --graphviz=trawler.dot \
+		  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+		  -DCMAKE_CXX_CLANG_TIDY="$clang_tidy" \
+		  -DCMAKE_BUILD_TYPE=Debug \
+	 && make -j`nproc`)
+    inotifywait -e modify `files`
 done
+

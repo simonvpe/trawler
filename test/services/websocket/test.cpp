@@ -68,9 +68,10 @@ main( )
       int i = 0;
 
       create_websocket_client(context, "localhost", 5000, { "client-1" })
+	.observe_on(rxcpp::observe_on_new_thread())
         .tap(send_reply("PING"))
         .filter(filter_data)
-        .take(3)
+        .take(1000000)
         .as_blocking( )
         .subscribe([&](auto s) { std::cout << "Recv " << ++i << ": " << s.get_payload( ) << '\n'; });
 

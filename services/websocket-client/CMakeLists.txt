@@ -19,4 +19,6 @@ target_include_directories(trawler-services-websocket-client
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
 
+set_target_properties(trawler-services-websocket-client PROPERTIES CXX_STANDARD 17)
+
 trawler_add_sanitizers(trawler-services-websocket-client)

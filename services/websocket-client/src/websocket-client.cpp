@@ -20,37 +20,21 @@ namespace websocket = beast::websocket;
 using tcp = asio::ip::tcp;
 
 /*******************************************************************************
- * state_type
+ * type declarations
  ******************************************************************************/
-
-struct state_type
-{
-  using strand_type = asio::strand<asio::io_context::executor_type>;
-  using stream_type = websocket::stream<tcp::socket>;
-  using resolver_type = tcp::resolver;
-  using buffer_type = beast::multi_buffer;
-  using logger_type = Logger;
-  using context_type = std::shared_ptr<ServiceContext>;
-
-  resolver_type resolver;
-  stream_type ws;
-  buffer_type buffer;
-  strand_type strand;
-  strand_type write_strand;
-  logger_type logger;
-  context_type context;
-
-  explicit state_type(decltype(context) context, decltype(logger) logger)
-    : resolver{ context->get_session_context( ) }
-    , ws{ context->get_session_context( ) }
-    , strand{ context->get_session_context( ).get_executor( ) }
-    , write_strand{ context->get_session_context( ).get_executor( ) }
-    , logger{ std::move(logger) }
-    , context{ std::move(context) }
-  {}
-};
-
 using error_t = boost::system::error_code;
+using host_t = std::string;
+using port_t = std::string;
+using context_t = ServiceContext;
+using context_tp = std::shared_ptr<context_t>;
+using logger_t = Logger;
+using strand_t = asio::strand<asio::io_context::executor_type>;
+using strand_tp = std::shared_ptr<strand_t>;
+using stream_t = websocket::stream<tcp::socket>;
+using stream_tp = std::shared_ptr<stream_t>;
+using resolver_t = tcp::resolver;
+using resolver_tp = std::shared_ptr<resolver_t>;
+using resolver_result_t = tcp::resolver::results_type;
 
 /*******************************************************************************
  * make_runtime_error
@@ -68,172 +52,186 @@ make_runtime_error(const error_t& e)
 }
 
 /*******************************************************************************
- * resolve_address
- ******************************************************************************/
-using resolve_result_t = std::tuple<std::shared_ptr<state_type>, tcp::resolver::results_type>;
-
-auto
-resolve_address(std::shared_ptr<state_type> state, const std::string& host, const std::string& port)
-{
-  return rxcpp::observable<>::create<resolve_result_t>([state = std::move(state), host, port](auto subscriber) {
-    auto on_resolve = [state, subscriber](error_t ec, const tcp::resolver::results_type& results) {
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-      state->logger.debug("Address resolution successful");
-      subscriber.on_next(resolve_result_t{ state, results });
-      subscriber.on_completed( );
-    };
-    state->resolver.async_resolve(host, port, std::move(on_resolve));
-  });
-}
-
-/*******************************************************************************
- * connect
- ******************************************************************************/
-using connect_result_t = std::tuple<std::shared_ptr<state_type>, tcp::endpoint>;
-
-auto
-connect(std::shared_ptr<state_type> state, const tcp::resolver::results_type& results)
-{
-  return rxcpp::observable<>::create<connect_result_t>([state = std::move(state), results](auto subscriber) {
-    auto on_connect = [state, subscriber](error_t ec, const tcp::endpoint& endpoint) {
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-      state->logger.debug("Connection successful");
-      subscriber.on_next(connect_result_t{ state, endpoint });
-      subscriber.on_completed( );
-    };
-    asio::async_connect(state->ws.next_layer( ), results, std::move(on_connect));
-  });
-}
-
-/*******************************************************************************
- * websocket_handshake
- ******************************************************************************/
-using websocket_handshake_result_t = std::shared_ptr<state_type>;
-
-auto
-websocket_handshake(std::shared_ptr<state_type> state, const std::string& host, const std::string& target)
-{
-  using result_t = websocket_handshake_result_t;
-  auto on_subscribe = [state = std::move(state), host, target](rxcpp::subscriber<result_t> subscriber) {
-    auto on_handshake = [state, subscriber](error_t ec) {
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-      state->logger.debug("Websocket handshake successful");
-      subscriber.on_next(websocket_handshake_result_t{ state });
-      subscriber.on_completed( );
-    };
-    state->ws.async_handshake(host, target, std::move(on_handshake));
-  };
-  return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
-}
-
-/*******************************************************************************
- * make_writer
+ * make_address_resolver
  ******************************************************************************/
 auto
-make_websocket_writer(const std::shared_ptr<state_type>& state)
+make_address_resolver(const context_tp& context, const logger_t& logger, const host_t& host, const port_t& port)
 {
-  return asio::bind_executor(state->write_strand, [state](std::string data) {
-    auto on_write = [state](error_t ec, std::size_t bytes_transferred) {
-      if (ec == websocket::error::closed || ec == boost::system::errc::operation_canceled || ec == asio::error::eof) {
-        return;
-      }
-    };
-    state->ws.async_write(asio::buffer(data), asio::bind_executor(state->write_strand, std::move(on_write)));
-  });
-};
+  return [=]( ) {
+    using result_t = std::tuple<resolver_result_t>;
 
-/*******************************************************************************
- * start_websocket_loop
- ******************************************************************************/
-void
-start_websocket_loop(const std::shared_ptr<state_type>& state, rxcpp::subscriber<ServicePacket> subscriber)
-{
-  asio::bind_executor(state->strand, [state, subscriber = std::move(subscriber)] {
-    auto on_read = [state, subscriber](error_t ec, std::size_t bytes_transferred) {
-      if (ec == websocket::error::closed || ec == boost::system::errc::operation_canceled || ec == asio::error::eof) {
-        state->logger.info("Connection closed");
-        subscriber.on_next(ServicePacket{ ServicePacket::EStatus::DISCONNECTED });
-        subscriber.on_completed( );
-        return;
-      }
+    auto resolver = std::make_shared<resolver_t>(context->get_session_context( ));
 
-      if (ec) {
-        state->logger.info("Error: " + ec.message( ));
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-
-      state->logger.debug("Reading...");
-
-      auto data = beast::buffers_to_string(state->buffer.data( ));
-      auto packet = ServicePacket{ ServicePacket::EStatus::DATA_TRANSMISSION,
-                                   std::move(data),
-                                   make_websocket_writer(state) };
-      subscriber.on_next(std::move(packet));
-      state->buffer.consume(state->buffer.size( ));
-
-      start_websocket_loop(state, subscriber);
-    };
-    state->ws.async_read(state->buffer, asio::bind_executor(state->strand, std::move(on_read)));
-  })( );
-}
-
-/*******************************************************************************
- * disconnect_websocket
- ******************************************************************************/
-void
-disconnect_websocket(const std::shared_ptr<state_type>& state, rxcpp::subscriber<ServicePacket> subscriber)
-{
-  auto do_disconnect = [state, subscriber = std::move(subscriber)] {
-    state->ws.close(websocket::close_code::normal);
-    asio::bind_executor(state->strand, [state, subscriber] {
-      beast::multi_buffer drain;
-      while (true) {
-
-        boost::system::error_code ec;
-
-        state->ws.read(drain, ec);
-
-        if (ec == websocket::error::closed || ec == boost::system::errc::operation_canceled) {
-          state->logger.info("Disconnected");
+    auto on_subscribe = [=](auto subscriber) {
+      auto on_resolve = [=](error_t ec, const resolver_result_t& results) {
+        if (ec) {
+          logger.critical("Address resolution failed");
+          subscriber.on_error(make_runtime_error(ec));
           return;
         }
+        logger.debug("Address resolution successful");
+        subscriber.on_next(std::make_tuple(results));
+        subscriber.on_completed( );
+      };
 
-        if (ec) {
-          state->logger.debug("Failed to disconnect: " + ec.message( ));
-          subscriber.on_error(make_runtime_error(ec));
-        }
-      }
-    })( );
+      resolver->async_resolve(host, port, std::move(on_resolve));
+    };
+
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
   };
-  asio::bind_executor(state->write_strand, std::move(do_disconnect))( );
+}
+/*******************************************************************************
+ * make_websocket_connector
+ ******************************************************************************/
+auto
+make_websocket_connector(const context_tp& context, const logger_t& logger)
+{
+  return [=](const resolver_result_t& resolve_result) {
+    using result_t = std::tuple<stream_tp>;
+
+    auto stream = std::make_shared<stream_t>(context->get_session_context( ));
+
+    auto on_subscribe = [=](auto subscriber) {
+      auto on_connect = [=](error_t ec, auto /*endpoint*/) {
+        if (ec) {
+          logger.critical("Connection failed");
+          subscriber.on_error(make_runtime_error(ec));
+          return;
+        }
+        logger.debug("Connection successful");
+        subscriber.on_next(std::make_tuple(stream));
+        subscriber.on_completed( );
+      };
+
+      asio::async_connect(stream->next_layer( ), resolve_result, std::move(on_connect));
+    };
+
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+  };
 }
 
 /*******************************************************************************
- * create_websocket_observable
+ * make_websocket_handshaker
  ******************************************************************************/
-using read_result_t = ServicePacket;
-
 auto
-create_websocket_observable(std::shared_ptr<state_type> state)
+make_websocket_handshaker(const logger_t& logger, const std::string& host, const std::string& target)
 {
-  using result_t = read_result_t;
-  auto on_subscribe = [state = std::move(state)](rxcpp::subscriber<result_t> subscriber) {
-    subscriber.on_next(ServicePacket{ ServicePacket::EStatus::CONNECTED, "", make_websocket_writer(state) });
-    using read_t = std::function<void(std::shared_ptr<state_type>)>;
+  return [=](const stream_tp& stream) {
+    using result_t = std::tuple<stream_tp>;
 
-    start_websocket_loop(state, std::move(subscriber));
+    auto on_subscribe = [=](auto subscriber) {
+      auto on_handshake = [=](error_t ec) {
+        if (ec) {
+          logger.critical("Handshake failed");
+          subscriber.on_error(make_runtime_error(ec));
+          return;
+        }
+        logger.debug("Handshake successful");
+        subscriber.on_next(std::make_tuple(stream));
+        subscriber.on_completed( );
+      };
+
+      stream->async_handshake(host, target, std::move(on_handshake));
+    };
+
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
   };
-  return rxcpp::observable<>::create<ServicePacket>(on_subscribe);
+}
+
+/*******************************************************************************
+ * run_websocket_event_loop
+ ******************************************************************************/
+template<typename DoRead>
+void
+run_websocket_event_loop(DoRead do_read)
+{
+  do_read([=](auto ec, auto logger, auto buffer, auto on_next, auto on_error, auto on_completed) {
+    using status_t = ServicePacket::EStatus;
+    logger.debug("Reading...");
+
+    if (ec == websocket::error::closed || ec == boost::system::errc::operation_canceled || ec == asio::error::eof) {
+      logger.info("Connection closed");
+      on_next(status_t::DISCONNECTED);
+      on_completed( );
+      return;
+    }
+
+    if (ec) {
+      logger.info("Error: " + ec.message( ));
+      on_error(make_runtime_error(ec));
+      return;
+    }
+
+    {
+      auto data = beast::buffers_to_string(buffer->data( ));
+      on_next(status_t::DATA_TRANSMISSION, std::move(data));
+      buffer->consume(buffer->size( ));
+    }
+
+    run_websocket_event_loop(do_read);
+  });
+}
+
+/*******************************************************************************
+ * make_websocket_event_loop
+ ******************************************************************************/
+auto
+make_websocket_event_loop(const context_tp& context, const logger_t& logger)
+{
+  return [=](const stream_tp& stream) {
+    using result_t = ServicePacket;
+
+    auto buffer = std::make_shared<beast::multi_buffer>( );
+    auto session_strand = std::make_shared<strand_t>(context->get_session_context( ).get_executor( ));
+    auto service_strand = std::make_shared<strand_t>(context->get_service_context( ).get_executor( ));
+
+    auto on_subscribe = [=](auto subscriber) {
+      logger.debug("Someone subscribed");
+
+      using status_t = ServicePacket::EStatus;
+      using data_t = const std::string&;
+
+      auto on_write = [=](data_t data) {
+        auto fn = [=] {
+          auto cb = [](error_t, std::size_t) {};
+          stream->async_write(asio::buffer(data), asio::bind_executor(*session_strand, std::move(cb)));
+        };
+        asio::bind_executor(*service_strand, fn)( );
+      };
+
+      auto on_error = [=](std::exception_ptr e) {
+        auto fn = asio::bind_executor(*service_strand, [=] { subscriber.on_error(e); });
+        fn( );
+      };
+
+      auto on_next = [=](status_t status, data_t data = "") {
+        auto fn = asio::bind_executor(*service_strand, [=] {
+          subscriber.on_next(ServicePacket{ status, data, on_write });
+        });
+        fn( );
+      };
+
+      auto on_completed = [=]( ) {
+        auto fn = asio::bind_executor(*service_strand, [=]( ) { subscriber.on_completed( ); });
+        fn( );
+      };
+
+      on_next(status_t::CONNECTED);
+
+      auto do_read = [=](auto on_read_impl) {
+        logger.debug("Performing read");
+
+        auto read_callback = [=](error_t ec, std::size_t /*bytes_transferred*/) {
+          on_read_impl(ec, logger, buffer, on_next, on_error, on_completed);
+        };
+
+        stream->async_read(*buffer, asio::bind_executor(*session_strand, read_callback));
+      };
+
+      run_websocket_event_loop(std::move(do_read));
+    };
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+  };
 }
 
 /*******************************************************************************
@@ -247,32 +245,19 @@ create_websocket_client(const std::shared_ptr<ServiceContext>& context,
 {
   using namespace rxcpp::operators;
 
-  auto state = std::make_shared<state_type>(context, logger);
+  auto address_resolver = make_address_resolver(context, logger, host, std::to_string(port));
+  auto websocket_connector = make_websocket_connector(context, logger);
+  auto websocket_handshaker = make_websocket_handshaker(logger, host, "/");
+  auto event_loop = make_websocket_event_loop(context, logger);
 
-  // Resolve the address
-  return resolve_address(state, host, std::to_string(port))
-         // Connect to the resolved address
-         | map([](const resolve_result_t& resolve_result) { return std::apply(connect, resolve_result); }) |
-         switch_on_next( )
-
-         // Perform a websocket handshake
-         | map([host, port = std::to_string(port)](const connect_result_t& connect_result) {
-             return websocket_handshake(std::get<0>(connect_result), host, port);
-           }) |
-         switch_on_next( )
-
-         // Now we're talking (literally)
-         | map([](std::shared_ptr<state_type> state) { return create_websocket_observable(state); }) |
-         switch_on_next( )
-
-         // Make sure to disconnect in case of unsubscribe
-         | lift<ServicePacket>([state](rxcpp::subscriber<ServicePacket> subscriber) {
-             subscriber.get_subscription( ).add([state, subscriber] { disconnect_websocket(state, subscriber); });
-             return subscriber;
-           })
-
-         | tap([](auto p) { std::cout << "PACKET " << p.get_payload( ) << '\n'; },
-               [](auto err) { std::cout << "ERROR\n"; }) |
-         as_dynamic( );
+  return address_resolver( )
+    .map([=](auto result) { return std::apply(websocket_connector, result); })
+    .switch_on_next( )
+    .map([=](auto result) { return std::apply(websocket_handshaker, result); })
+    .switch_on_next( )
+    .map([=](auto result) { return std::apply(event_loop, result); })
+    .switch_on_next( )
+    .lift<ServicePacket>([](auto subscriber) { return subscriber; })
+    .as_dynamic( );
 }
 }

@@ -1,19 +1,20 @@
+#include <boost/asio/bind_executor.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
+#include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket.hpp>
 #include <boost/bind.hpp>
-#include <memory>
 #include <rxcpp/rx.hpp>
-#include <string>
-#include <trawler/services/packet-handler.hpp>
 #include <trawler/services/service-context.hpp>
-#include <trawler/services/util/create-asio-service.hpp>
+#include <trawler/services/service-packet.hpp>
 #include <trawler/services/websocket-client/websocket-client.hpp>
-#include <utility>
 
 namespace trawler {
+/*******************************************************************************
+ * aliases
+ ******************************************************************************/
 namespace asio = boost::asio;
 namespace beast = boost::beast;
 namespace websocket = beast::websocket;
@@ -29,11 +30,9 @@ using context_t = ServiceContext;
 using context_tp = std::shared_ptr<context_t>;
 using logger_t = Logger;
 using strand_t = asio::strand<asio::io_context::executor_type>;
-using strand_tp = std::shared_ptr<strand_t>;
 using stream_t = websocket::stream<tcp::socket>;
 using stream_tp = std::shared_ptr<stream_t>;
 using resolver_t = tcp::resolver;
-using resolver_tp = std::shared_ptr<resolver_t>;
 using resolver_result_t = tcp::resolver::results_type;
 
 /*******************************************************************************
@@ -77,7 +76,7 @@ make_address_resolver(const context_tp& context, const logger_t& logger, const h
       resolver->async_resolve(host, port, std::move(on_resolve));
     };
 
-    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
 /*******************************************************************************
@@ -106,7 +105,7 @@ make_websocket_connector(const context_tp& context, const logger_t& logger)
       asio::async_connect(stream->next_layer( ), resolve_result, std::move(on_connect));
     };
 
-    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
 
@@ -134,7 +133,7 @@ make_websocket_handshaker(const logger_t& logger, const std::string& host, const
       stream->async_handshake(host, target, std::move(on_handshake));
     };
 
-    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
 
@@ -230,7 +229,7 @@ make_websocket_event_loop(const context_tp& context, const logger_t& logger)
 
       run_websocket_event_loop(std::move(do_read));
     };
-    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe)).as_dynamic( );
+    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
 

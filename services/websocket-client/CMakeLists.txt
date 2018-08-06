@@ -1,15 +1,16 @@
 add_library(trawler-services-websocket-client
   STATIC
     src/websocket-client.cpp
+    src/websocket-client-ssl.cpp
 )
 
 target_link_libraries(trawler-services-websocket-client
   PUBLIC
     trawler-services-base
     rxcpp
+    OpenSSL::SSL
   PRIVATE
     trawler-services-websocket-common
-#    OpenSSL::SSL
 )
 
 target_include_directories(trawler-services-websocket-client

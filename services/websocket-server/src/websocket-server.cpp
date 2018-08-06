@@ -184,7 +184,7 @@ create_websocket_server(const std::shared_ptr<ServiceContext>& context,
   auto tcp_listener = make_tcp_listener(context, logger, host, port);
   auto tcp_acceptor = make_tcp_acceptor(context, logger);
   auto websocket_acceptor = make_websocket_acceptor(context, logger);
-  auto websocket_event_loop = make_websocket_event_loop(context, logger);
+  auto websocket_event_loop = make_websocket_event_loop<stream_t>(context, logger);
   
   return tcp_listener( )
     .flat_map(tcp_acceptor)

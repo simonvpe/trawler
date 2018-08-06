@@ -53,10 +53,11 @@ run_websocket_event_loop(DoRead do_read)
 /*******************************************************************************
  * make_websocket_event_loop
  ******************************************************************************/
+template<typename Stream>
 inline auto
 make_websocket_event_loop(const std::shared_ptr<ServiceContext>& context, const Logger& logger)
 {
-  using stream_t = websocket::stream<tcp::socket>;
+  using stream_t = Stream;
   using stream_tp = std::shared_ptr<stream_t>;
   using strand_t = asio::strand<asio::io_context::executor_type>;
   using error_t = boost::system::error_code;

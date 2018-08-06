@@ -7,6 +7,7 @@ function(TRAWLER_ADD_TEST)
   target_link_libraries("${NAME}" PRIVATE "${TRAWLER_ADD_TEST_LIBS}")
   set_target_properties("${NAME}" PROPERTIES CXX_CLANG_TIDY "")
   add_test("${NAME}" "${NAME}")
+  set_target_properties("${NAME}" PROPERTIES CXX_STANDARD 17)  
   trawler_add_sanitizers(${NAME})
 endfunction()
 

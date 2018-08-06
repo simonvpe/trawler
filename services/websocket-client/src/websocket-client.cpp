@@ -41,7 +41,7 @@ auto
 make_address_resolver(const context_tp& context, const logger_t& logger, const host_t& host, const port_t& port)
 {
   return [=]( ) {
-    using result_t = std::tuple<resolver_result_t>;
+    using result_t = resolver_result_t;
 
     auto resolver = std::make_shared<resolver_t>(context->get_session_context( ));
 
@@ -53,7 +53,7 @@ make_address_resolver(const context_tp& context, const logger_t& logger, const h
           return;
         }
         logger.debug("Address resolution successful");
-        subscriber.on_next(std::make_tuple(results));
+        subscriber.on_next(results);
         subscriber.on_completed( );
       };
 
@@ -70,7 +70,7 @@ auto
 make_websocket_connector(const context_tp& context, const logger_t& logger)
 {
   return [=](const resolver_result_t& resolve_result) {
-    using result_t = std::tuple<stream_tp>;
+    using result_t = stream_tp;
 
     auto stream = std::make_shared<stream_t>(context->get_session_context( ));
 
@@ -82,7 +82,7 @@ make_websocket_connector(const context_tp& context, const logger_t& logger)
           return;
         }
         logger.debug("Connection successful");
-        subscriber.on_next(std::make_tuple(stream));
+        subscriber.on_next(stream);
         subscriber.on_completed( );
       };
 
@@ -100,7 +100,7 @@ auto
 make_websocket_handshaker(const logger_t& logger, const std::string& host, const std::string& target)
 {
   return [=](const stream_tp& stream) {
-    using result_t = std::tuple<stream_tp>;
+    using result_t = stream_tp;
 
     auto on_subscribe = [=](auto subscriber) {
       auto on_handshake = [=](error_t ec) {
@@ -110,7 +110,7 @@ make_websocket_handshaker(const logger_t& logger, const std::string& host, const
           return;
         }
         logger.debug("Handshake successful");
-        subscriber.on_next(std::make_tuple(stream));
+        subscriber.on_next(stream);
         subscriber.on_completed( );
       };
 
@@ -139,13 +139,9 @@ create_websocket_client(const std::shared_ptr<ServiceContext>& context,
   auto event_loop = make_websocket_event_loop(context, logger);
 
   return address_resolver( )
-    .map([=](auto result) { return std::apply(websocket_connector, result); })
-    .switch_on_next( )
-    .map([=](auto result) { return std::apply(websocket_handshaker, result); })
-    .switch_on_next( )
-    .map([=](auto result) { return std::apply(event_loop, result); })
-    .switch_on_next( )
-    .lift<ServicePacket>([](auto subscriber) { return subscriber; })
+    .flat_map(websocket_connector)
+    .flat_map(websocket_handshaker)
+    .flat_map(event_loop)
     .as_dynamic( );
 }
 }

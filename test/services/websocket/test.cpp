@@ -43,7 +43,10 @@ main( )
       auto filter_data = [](auto packet) { return packet.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; };
 
       auto send_reply = [](const std::string& rep) {
-        return [rep](ServicePacket packet) { packet.call_on_reply(std::move(rep)); };
+        return [rep](ServicePacket packet) {
+		 std::cout << "Replying with " << rep << '\n';
+		 packet.call_on_reply(std::move(rep));
+	       };
       };
 
       auto srvsub = srv.observe_on(rxcpp::observe_on_new_thread( ))

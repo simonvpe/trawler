@@ -6,4 +6,5 @@ trawler_add_test(
   LIBS
     trawler-services-websocket-server
     trawler-services-websocket-client
+    trawler-logging
     doctest)

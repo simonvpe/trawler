@@ -20,7 +20,7 @@ SCENARIO("Websocket server and client") {
     auto filter_data = [](auto packet) { return packet.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; };
 
     auto send_reply = [](const std::string& rep) {
-      return [rep](ServicePacket packet) { packet.call_on_reply(std::move(rep)); };
+      return [rep](ServicePacket packet) { packet.reply(std::move(rep)); };
     };
 
     create_websocket_server(context, "0.0.0.0", 5000)

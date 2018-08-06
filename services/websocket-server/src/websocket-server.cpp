@@ -5,8 +5,6 @@
 #include <functional>
 #include <memory>
 #include <trawler/services/service-context.hpp>
-#include <trawler/services/util/create-asio-service.hpp>
-#include <trawler/services/util/tcp-listener.hpp>
 #include <trawler/services/websocket-server/websocket-server.hpp>
 #include <trawler/services/websocket-common/make-runtime-error.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>

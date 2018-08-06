@@ -21,7 +21,7 @@ private:
   on_reply_t on_reply;
 
 public:
-  bool call_on_reply(payload_t reply_payload)
+  bool reply(payload_t reply_payload)
   {
     if (on_reply) {
       on_reply(std::move(reply_payload));

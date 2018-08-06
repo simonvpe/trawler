@@ -6,7 +6,6 @@ add_library(trawler-services-websocket-client
 target_link_libraries(trawler-services-websocket-client
   PUBLIC
     trawler-services-base
-    trawler-services-util
     rxcpp
   PRIVATE
     trawler-services-websocket-common

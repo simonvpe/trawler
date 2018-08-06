@@ -5,6 +5,8 @@ add_library(trawler-services-base
 target_link_libraries(trawler-services-base
   INTERFACE
     rxcpp
+    Threads::Threads
+    Boost::system
 )
 
 target_include_directories(trawler-services-base

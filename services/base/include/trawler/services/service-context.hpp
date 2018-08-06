@@ -28,58 +28,31 @@ public:
     , session_work_guard{ session_context.get_executor( ) }
     , service_work_guard{ service_context.get_executor( ) }
   {
-    this->logger.debug("ServiceContext()");
-    run( );
+    for (auto i = 0U; i < nof_session_threads; ++i) {
+      threads.emplace_back([&] { session_context.run( ); });
+    }
+    for (auto i = 0U; i < nof_service_threads; ++i) {
+      threads.emplace_back([&] { service_context.run( ); });
+    }
   }
 
   ~ServiceContext( )
   {
-    logger.debug("~ServiceContext()");
-    join( );
+    session_work_guard.reset( );
+    service_work_guard.reset( );
+    session_context.stop( );
+    service_context.stop( );
+    for (auto& thread : threads) {
+      if (thread.joinable( )) {
+        thread.join( );
+      }
+    }
   }
 
   ServiceContext(const ServiceContext&) = delete;
   ServiceContext(ServiceContext&&) = delete;
   ServiceContext& operator=(const ServiceContext&) = delete;
   ServiceContext& operator=(ServiceContext&&) = delete;
-
-  void run( )
-  {
-    std::lock_guard<std::recursive_mutex> guard(mutex);
-    logger.debug("ServiceContext::run()");
-    if (!running( )) {
-      for (auto i = 0U; i < nof_session_threads; ++i) {
-        threads.emplace_back([&] { session_context.run( ); });
-      }
-      for (auto i = 0U; i < nof_service_threads; ++i) {
-        threads.emplace_back([&] { service_context.run( ); });
-      }
-    }
-  }
-
-  bool running( ) const
-  {
-    std::lock_guard<std::recursive_mutex> guard(mutex);
-    return !threads.empty( );
-  }
-
-  void join( )
-  {
-    std::lock_guard<std::recursive_mutex> guard(mutex);
-    if (running( )) {
-      logger.debug("ServiceContext::join()");
-      session_work_guard.reset( );
-      service_work_guard.reset( );
-      session_context.stop( );
-      service_context.stop( );
-      for (auto& thread : threads) {
-        if (thread.joinable( )) {
-          thread.join( );
-        }
-      }
-      threads.clear( );
-    }
-  }
 
   boost::asio::io_context& get_session_context( ) { return session_context; }
 

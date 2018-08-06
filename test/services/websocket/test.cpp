@@ -78,9 +78,7 @@ main( )
         .as_blocking( )
         .subscribe([&](auto s) { std::cout << "Recv " << ++i << ": " << s.get_payload( ) << '\n'; });
 
-      srvsub.unsubscribe( );
     }
-    context->join( );
   }
   return 0;
 }

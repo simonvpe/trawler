@@ -151,7 +151,7 @@ CheckOptions:
   - key:             readability-braces-around-statements.ShortStatementLines
     value:           '0'
   - key:             readability-function-size.BranchThreshold
-    value:           '3'
+    value:           '5'
   - key:             readability-function-size.LineThreshold
     value:           '60'
   - key:             readability-function-size.NestingThreshold

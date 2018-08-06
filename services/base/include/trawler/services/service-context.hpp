@@ -1,5 +1,6 @@
 #pragma once
 #include <algorithm>
+#include <boost/asio/executor_work_guard.hpp>
 #include <boost/asio/io_context.hpp>
 #include <mutex>
 #include <thread>
@@ -16,14 +17,19 @@ class ServiceContext
   boost::asio::io_context service_context;
   std::vector<std::thread> threads;
   mutable std::recursive_mutex mutex;
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> session_work_guard;
+  boost::asio::executor_work_guard<boost::asio::io_context::executor_type> service_work_guard;
 
 public:
   explicit ServiceContext(std::size_t nof_session_threads, std::size_t nof_service_threads, Logger logger)
     : nof_session_threads{ nof_session_threads }
     , nof_service_threads{ nof_service_threads }
     , logger{ std::move(logger) }
+    , session_work_guard{ session_context.get_executor( ) }
+    , service_work_guard{ service_context.get_executor( ) }
   {
     this->logger.debug("ServiceContext()");
+    run( );
   }
 
   ~ServiceContext( )
@@ -62,6 +68,8 @@ public:
     std::lock_guard<std::recursive_mutex> guard(mutex);
     if (running( )) {
       logger.debug("ServiceContext::join()");
+      session_work_guard.reset( );
+      service_work_guard.reset( );
       session_context.stop( );
       service_context.stop( );
       for (auto& thread : threads) {

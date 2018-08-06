@@ -15,7 +15,7 @@ SCENARIO("Websocket server and client") {
   Logger::set_log_level(Logger::ELogLevel::DEBUG);
 
   {
-    auto context = make_service_context(4, 4);
+    auto context = make_service_context(1, 1);
 
     auto filter_data = [](auto packet) { return packet.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; };
 
@@ -30,12 +30,19 @@ SCENARIO("Websocket server and client") {
 
     std::vector<std::string> result{};
 
-    create_websocket_client(context, "localhost", 5000, { "client-1" })
+    auto cli1 = create_websocket_client(context, "localhost", 5000, { "client-1" })
       .observe_on(rxcpp::observe_on_new_thread( ))
       .tap(send_reply("PING"))
       .filter(filter_data)
-      .take(10)
-      .reduce(std::vector<std::string>{},
+      .take(10);
+
+    auto cli2 = create_websocket_client(context, "localhost", 5000, { "client-2" })
+      .observe_on(rxcpp::observe_on_new_thread( ))
+      .tap(send_reply("PING"))
+      .filter(filter_data)
+      .take(10);
+
+    cli1.merge(cli2).reduce(std::vector<std::string>{},
               [](auto acc, auto s) {
 		CHECK( s.get_payload() == "PONG" );
                 acc.push_back(s.get_payload( ));
@@ -44,6 +51,6 @@ SCENARIO("Websocket server and client") {
       .as_blocking( )
       .subscribe([&](auto r) { result = r; });
     
-    CHECK(result.size() == 10);
+    CHECK(result.size() == 20);
   }
 }

@@ -13,13 +13,14 @@ function(trawler_add_sanitizers TARGET)
 endfunction()
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/CMake)
-find_package(Boost 1.66 COMPONENTS system REQUIRED)
+find_package(Boost 1.66 COMPONENTS system program_options REQUIRED)
 find_package(jq REQUIRED) # Version 1.5 required but headers don't provide this info
 find_package(Threads)
 find_package(OpenSSL REQUIRED)
 
 add_subdirectory(logging)
 add_subdirectory(services)
+add_subdirectory(cli)
 add_subdirectory(vendor)
 
 enable_testing()

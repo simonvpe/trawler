@@ -12,3 +12,4 @@ function(TRAWLER_ADD_TEST)
 endfunction()
 
 add_subdirectory(services)
+add_subdirectory(cli)

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 dir=`dirname $0`
-header_filter="`realpath $dir`/services/|`realpath $dir`/test/"
+header_filter="`realpath $dir`/services/|`realpath $dir`/test/|`realpath $dir`/cli/"
 clang_tidy="clang-tidy;-header-filter=$header_filter"
 
 files() {
-    find {services,test} \
+    find {services,test,cli} \
          -name '*.cpp' \
          -o -name '*.hpp' \
          -o -name CMakeLists.txt \
@@ -22,7 +22,8 @@ while true; do
 		  -DCMAKE_CXX_CLANG_TIDY="$clang_tidy" \
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DTRAWLER_ENABLE_SANITIZERS=ON \
-	 && make -j`nproc`)
+	 && make -j`nproc` \
+	&& CTEST_OUTPUT_ON_FAILURE=1 ctest ..)
     inotifywait -e modify `files`
 done
 

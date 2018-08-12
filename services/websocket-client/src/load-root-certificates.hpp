@@ -94,8 +94,9 @@ load_root_certificates(ssl::context& ctx, boost::system::error_code& ec)
 
     ctx.add_certificate_authority(
         boost::asio::buffer(cert.data(), cert.size()), ec);
-    if(ec)
+    if(ec) {
         return;
+    }
 }
 
 } // detail
@@ -121,8 +122,9 @@ load_root_certificates(ssl::context& ctx)
 {
     boost::system::error_code ec;
     detail::load_root_certificates(ctx, ec);
-    if(ec)
+    if(ec) {
         throw boost::system::system_error{ec};
+    }
 }
 
 #endif

@@ -1,5 +1,4 @@
 #pragma once
-
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>

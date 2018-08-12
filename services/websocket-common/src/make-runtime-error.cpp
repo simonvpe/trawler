@@ -8,8 +8,8 @@ make_runtime_error(const std::string& message)
 }
 
 std::exception_ptr
-make_runtime_error(const boost::system::error_code& e)
+make_runtime_error(const boost::system::error_code& ec)
 {
-  return make_runtime_error(e.message( ));
+  return make_runtime_error(ec.message( ));
 }
 }

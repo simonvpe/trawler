@@ -1,43 +1,32 @@
-#include <boost/beast/core.hpp>
-#include <boost/beast/core/buffers_to_string.hpp>
-#include <boost/beast/websocket.hpp>
-#include <boost/bind.hpp>
-#include <functional>
-#include <memory>
 #include <trawler/services/service-context.hpp>
-#include <trawler/services/websocket-server/websocket-server.hpp>
 #include <trawler/services/websocket-common/make-runtime-error.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>
-#include <tuple>
-#include <utility>
+#include <trawler/services/websocket-server/websocket-server.hpp>
 
 namespace trawler {
 
-namespace beast = boost::beast;
-namespace websocket = beast::websocket;
-
 namespace {
 
-using error_t = boost::system::error_code;
-using acceptor_t = tcp::acceptor;
+using acceptor_t = boost::asio::ip::tcp::acceptor;
 using acceptor_tp = std::shared_ptr<acceptor_t>;
-using socket_t = tcp::socket;
-using socket_tp = std::shared_ptr<socket_t>;
-using strand_t = asio::strand<asio::io_context::executor_type>;
-using stream_t = websocket::stream<tcp::socket>;
-using stream_tp = std::shared_ptr<stream_t>;
-using logger_t = Logger;
 using context_t = ServiceContext;
 using context_tp = std::shared_ptr<ServiceContext>;
+using endpoint_t = boost::asio::ip::tcp::endpoint;
+using error_t = boost::system::error_code;
+using host_t = std::string;
+using logger_t = Logger;
+using port_t = unsigned short;
+using socket_t = boost::asio::ip::tcp::socket;
+using socket_tp = std::shared_ptr<socket_t>;
+using strand_t = boost::asio::strand<boost::asio::io_context::executor_type>;
+using stream_t = boost::beast::websocket::stream<tcp::socket>;
+using stream_tp = std::shared_ptr<stream_t>;
 
 /*******************************************************************************
  * make_tcp_listener
  ******************************************************************************/
 auto
-make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
-                  const Logger& logger,
-                  const std::string& host,
-                  const unsigned short port)
+make_tcp_listener(const context_tp& context, const logger_t& logger, const host_t& host, const port_t port)
 {
   return [=] {
     using result_t = acceptor_tp;
@@ -46,7 +35,7 @@ make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
       auto acceptor = std::make_shared<acceptor_t>(context->get_session_context( ));
 
       boost::system::error_code ec;
-      auto endpoint = tcp::endpoint{ boost::asio::ip::make_address(host), port };
+      auto endpoint = endpoint_t{ boost::asio::ip::make_address(host), port };
 
       acceptor->open(endpoint.protocol( ), ec);
       if (ec) {
@@ -54,7 +43,7 @@ make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
         return;
       }
 
-      acceptor->set_option(asio::socket_base::reuse_address(true), ec);
+      acceptor->set_option(boost::asio::socket_base::reuse_address(true), ec);
       if (ec) {
         subscriber.on_error(make_runtime_error(ec));
         return;
@@ -66,7 +55,7 @@ make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
         return;
       }
 
-      acceptor->listen(asio::socket_base::max_listen_connections, ec);
+      acceptor->listen(boost::asio::socket_base::max_listen_connections, ec);
       if (ec) {
         subscriber.on_error(make_runtime_error(ec));
         return;
@@ -120,17 +109,17 @@ make_tcp_acceptor(const std::shared_ptr<ServiceContext>& context, const Logger& 
       auto service_strand = std::make_shared<strand_t>(context->get_service_context( ).get_executor( ));
 
       auto on_error = [service_strand, subscriber](std::exception_ptr e) {
-        auto fn = asio::bind_executor(*service_strand, [=] { subscriber.on_error(e); });
+        auto fn = boost::asio::bind_executor(*service_strand, [=] { subscriber.on_error(e); });
         fn( );
       };
 
       auto on_next = [service_strand, subscriber](socket_tp socket) {
-        auto fn = asio::bind_executor(*service_strand, [=] { subscriber.on_next(std::move(socket)); });
+        auto fn = boost::asio::bind_executor(*service_strand, [=] { subscriber.on_next(socket); });
         fn( );
       };
 
       auto on_completed = [service_strand, subscriber] {
-        auto fn = asio::bind_executor(*service_strand, [=] { subscriber.on_completed( ); });
+        auto fn = boost::asio::bind_executor(*service_strand, [=] { subscriber.on_completed( ); });
         fn( );
       };
 
@@ -146,7 +135,7 @@ make_tcp_acceptor(const std::shared_ptr<ServiceContext>& context, const Logger& 
 }
 
 /*******************************************************************************
- * make_websocket_handshaker
+ * make_websocket_acceptor
  ******************************************************************************/
 auto
 make_websocket_acceptor(const std::shared_ptr<ServiceContext>& context, const Logger& logger)
@@ -157,17 +146,15 @@ make_websocket_acceptor(const std::shared_ptr<ServiceContext>& context, const Lo
     auto stream = std::make_shared<stream_t>(std::move(*socket));
 
     auto on_subscribe = [stream, context, logger](auto subscriber) {
-      logger.debug("Accepting websocket");
-      auto fn = [=](error_t ec) {
+      auto fn = [stream, context, logger, subscriber](error_t ec) {
         if (ec) {
           subscriber.on_error(make_runtime_error(ec));
           return;
         }
-        logger.debug("Accepted websocket");
         subscriber.on_next(stream);
         subscriber.on_completed( );
       };
-      stream->async_accept(asio::bind_executor(context->get_service_context( ), fn));
+      stream->async_accept(boost::asio::bind_executor(context->get_service_context( ), fn));
     };
 
     return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
@@ -185,10 +172,10 @@ create_websocket_server(const std::shared_ptr<ServiceContext>& context,
   auto tcp_acceptor = make_tcp_acceptor(context, logger);
   auto websocket_acceptor = make_websocket_acceptor(context, logger);
   auto websocket_event_loop = make_websocket_event_loop<stream_t>(context, logger);
-  
+
   return tcp_listener( )
-    .flat_map(tcp_acceptor)
-    .flat_map(websocket_acceptor)
-    .flat_map(websocket_event_loop);
+    .flat_map(std::move(tcp_acceptor))
+    .flat_map(std::move(websocket_acceptor))
+    .flat_map(std::move(websocket_event_loop));
 }
 }

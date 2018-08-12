@@ -1,6 +1,8 @@
+# Library
 add_library(trawler-cli
   STATIC
     src/parse-options.cpp
+    src/parse-configuration.cpp
 )
 
 target_link_libraries(trawler-cli
@@ -17,3 +19,22 @@ target_include_directories(trawler-cli
 )
 
 trawler_add_sanitizers(trawler-cli)
+
+set_target_properties(trawler-cli PROPERTIES CXX_STANDARD 17)
+
+# Executable
+add_executable(trawler
+  src/trawler.cpp
+)
+
+target_link_libraries(trawler
+  PRIVATE
+    trawler-cli
+    trawler-logging
+    trawler-services-websocket-client
+    trawler-services-websocket-server
+)
+
+trawler_add_sanitizers(trawler)
+
+set_target_properties(trawler PROPERTIES CXX_STANDARD 17)

@@ -29,7 +29,7 @@ make_websocket_connector(const context_tp& context, const logger_t& logger)
     auto stream = std::make_shared<stream_t>(context->get_session_context( ));
 
     auto on_subscribe = [=](auto subscriber) {
-      auto on_connect = [=](error_t ec, auto /*endpoint*/) {
+      auto on_connect = [logger, stream, subscriber, context](error_t ec, auto /*endpoint*/) {
         if (ec) {
           logger.critical("Connection failed");
           subscriber.on_error(make_runtime_error(ec));
@@ -54,7 +54,7 @@ rxcpp::observable<ServicePacket>
 create_websocket_client(const std::shared_ptr<ServiceContext>& context,
                         const std::string& host,
                         unsigned short port,
-			const std::string& target,
+                        const std::string& target,
                         const Logger& logger)
 {
   using namespace rxcpp::operators;

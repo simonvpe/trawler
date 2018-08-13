@@ -3,12 +3,18 @@ add_library(trawler-cli
   STATIC
     src/parse-options.cpp
     src/parse-configuration.cpp
+    src/spawn-services.cpp
 )
 
 target_link_libraries(trawler-cli
+  PRIVATE
+    yaml-cpp
+    trawler-services-websocket-client
+    trawler-services-websocket-server
+    trawler-logging
   PUBLIC
     Boost::program_options
-    yaml-cpp
+    trawler-services-base
 )
 
 target_include_directories(trawler-cli
@@ -32,8 +38,6 @@ target_link_libraries(trawler
   PRIVATE
     trawler-cli
     trawler-logging
-    trawler-services-websocket-client
-    trawler-services-websocket-server
 )
 
 trawler_add_sanitizers(trawler)

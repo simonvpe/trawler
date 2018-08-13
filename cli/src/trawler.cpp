@@ -3,7 +3,9 @@
 #include <string>
 #include <trawler/cli/parse-configuration.hpp>
 #include <trawler/cli/parse-options.hpp>
+#include <trawler/cli/spawn-services.hpp>
 #include <trawler/logging/logger.hpp>
+#include <trawler/services/service-context.hpp>
 #include <vector>
 
 using namespace trawler;
@@ -84,7 +86,7 @@ main(int argc, const char* argv[])
     }
   }
 
-  std::string configuration;
+  std::string configuration_string;
   {
     auto [filename, err] = get_config_file(vm);
     if (err) {
@@ -98,7 +100,7 @@ main(int argc, const char* argv[])
       if (!file) {
         throw std::runtime_error("failed to open file " + filename);
       }
-      configuration = std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>( ) };
+      configuration_string = std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>( ) };
     } catch (...) {
       print_usage(std::cerr, description);
       print_exception(std::current_exception( ));
@@ -106,7 +108,11 @@ main(int argc, const char* argv[])
     }
   }
 
-  parse_configuration(configuration);
+  const auto configuration = parse_configuration(configuration_string);
+
+  auto context = make_service_context( );
+
+  auto services = spawn_services(context, configuration.services, logger);
 
   return 0;
 }

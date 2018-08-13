@@ -8,6 +8,7 @@ add_library(trawler-cli
 target_link_libraries(trawler-cli
   PUBLIC
     Boost::program_options
+    yaml-cpp
 )
 
 target_include_directories(trawler-cli

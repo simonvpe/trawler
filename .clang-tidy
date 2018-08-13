@@ -1,5 +1,5 @@
 ---
-Checks:          'clang-analyzer-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,readability-*,bugprone-*,modernize-*,-readability-implicit-bool-conversion,boost-*,cert-*,misc-*,portability-*,performance-*,hicpp-*'
+Checks:          'clang-analyzer-*,clang-analyzer-*,clang-diagnostic-*,clang-analyzer-*,cppcoreguidelines-*,readability-*,bugprone-*,modernize-*,-readability-implicit-bool-conversion,boost-*,cert-*,misc-*,portability-*,performance-*,hicpp-*,-cert-err58-cpp'
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''
 AnalyzeTemporaryDtors: false

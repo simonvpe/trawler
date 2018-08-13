@@ -1,0 +1,21 @@
+---
+title: Bitcoin Example
+
+services:
+  - name: bitcoin-client
+    service: websocket-client
+    host: api.bitfinex.com
+    port: 443
+    target: /ws
+    ssl: true
+
+pipelines:
+  - name: subscribe
+    source: bitcoin-client
+    event: connected
+    tap:
+      action: reply
+      target: bitcoin-client
+      payload: { event: subscribe, channel: ticker, pair: BTCUSD }
+      
+  

@@ -1,6 +1,7 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include <trawler/cli/parse-configuration.hpp>
 #include <trawler/cli/parse-options.hpp>
 #include <trawler/logging/logger.hpp>
 #include <vector>
@@ -94,10 +95,10 @@ main(int argc, const char* argv[])
 
     try {
       std::fstream file{ filename, std::ios::in };
-      if(!file) {
-	throw std::runtime_error("failed to open file " + filename);
+      if (!file) {
+        throw std::runtime_error("failed to open file " + filename);
       }
-      configuration = std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>( ) };      
+      configuration = std::string{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>( ) };
     } catch (...) {
       print_usage(std::cerr, description);
       print_exception(std::current_exception( ));
@@ -105,7 +106,7 @@ main(int argc, const char* argv[])
     }
   }
 
-  std::cout << configuration;
+  parse_configuration(configuration);
 
   return 0;
 }

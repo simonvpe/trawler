@@ -6,7 +6,7 @@
 
 namespace trawler {
 
-std::vector<rxcpp::observable<ServicePacket>>
+std::vector<std::pair<std::string, rxcpp::observable<ServicePacket>>>
 spawn_services(const std::shared_ptr<class ServiceContext>& context,
                const std::vector<configuration_t::service_t>& services,
                const Logger& logger);

@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 dir=`dirname $0`
-header_filter="`realpath $dir`/services/|`realpath $dir`/test/|`realpath $dir`/cli/"
+header_filter="`realpath $dir`/services/|`realpath $dir`/test/|`realpath $dir`/cli/|`realpath $dir`/pipelines/"
 clang_tidy="clang-tidy;-header-filter=$header_filter"
 
 files() {
-    find {services,test,cli} \
+    find {services,test,cli,pipelines} \
          -name '*.cpp' \
          -o -name '*.hpp' \
          -o -name CMakeLists.txt \

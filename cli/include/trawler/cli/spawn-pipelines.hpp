@@ -8,6 +8,7 @@ namespace trawler {
 
 std::vector<rxcpp::subscription>
 spawn_pipelines(const std::shared_ptr<class ServiceContext>& context,
+                const std::vector<std::pair<std::string, rxcpp::observable<ServicePacket>>>& services,
                 const std::vector<configuration_t::pipeline_t>& pipelines,
                 const Logger& logger);
 }

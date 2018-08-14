@@ -115,7 +115,9 @@ main(int argc, const char* argv[])
 
   auto services = spawn_services(context, configuration.services, logger);
 
-  auto pipelines = spawn_pipelines(context, configuration.pipelines, logger);
+  auto subscriptions = spawn_pipelines(context, services, configuration.pipelines, logger);
 
+  using namespace std::chrono_literals;
+  std::this_thread::sleep_for(1s);
   return 0;
 }

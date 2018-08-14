@@ -11,7 +11,7 @@ services:
 
 pipelines:
   - name: subscribe
-    pipeline: reply
+    pipeline: endpoint
     source: bitcoin-client
     event: connected
     data: '{ "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }'

@@ -9,7 +9,7 @@ services:
     target: /ws
     ssl: true
 
-pipelines:
+endpoints:
   - name: subscribe
     pipeline: endpoint
     source: bitcoin-client

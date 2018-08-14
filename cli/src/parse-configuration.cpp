@@ -23,15 +23,14 @@ struct convert<trawler::config::websocket_client_service_t>
 };
 
 /*******************************************************************************
- * convert endpoint_pipeline_t
+ * convert endpoint_t
  *******************************************************************************/
 template<>
-struct convert<trawler::config::endpoint_pipeline_t>
+struct convert<trawler::config::endpoint_t>
 {
-  static bool decode(const Node& node, trawler::config::endpoint_pipeline_t& pipe)
+  static bool decode(const Node& node, trawler::config::endpoint_t& pipe)
   {
     pipe.name = node["name"].as<std::string>( );
-    pipe.pipeline = node["pipeline"].as<std::string>( );
     pipe.source = node["source"].as<std::string>( );
     pipe.event = node["event"].as<std::string>( );
     pipe.data = node["data"].as<std::string>( );
@@ -58,8 +57,16 @@ struct convert<trawler::configuration_t>
     }
 
     for (const auto& pipe : node["pipelines"]) {
+      /*
       if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "endpoint") {
         config.pipelines.emplace_back(pipe.as<trawler::config::endpoint_pipeline_t>( ));
+      }
+      */
+    }
+
+    for (const auto& endp : node["endpoints"]) {
+      if (endp.IsMap( )) {
+        config.endpoints.emplace_back(endp.as<trawler::config::endpoint_t>( ));
       }
     }
 

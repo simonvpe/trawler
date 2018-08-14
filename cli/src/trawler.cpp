@@ -3,6 +3,7 @@
 #include <string>
 #include <trawler/cli/parse-configuration.hpp>
 #include <trawler/cli/parse-options.hpp>
+#include <trawler/cli/spawn-endpoints.hpp>
 #include <trawler/cli/spawn-pipelines.hpp>
 #include <trawler/cli/spawn-services.hpp>
 #include <trawler/logging/logger.hpp>
@@ -115,7 +116,9 @@ main(int argc, const char* argv[])
 
   auto services = spawn_services(context, configuration.services, logger);
 
-  auto subscriptions = spawn_pipelines(context, services, configuration.pipelines, logger);
+  auto pipelines = spawn_pipelines(context, services, configuration.pipelines, logger);
+
+  auto subscriptions = spawn_endpoints(context, services, pipelines, configuration.endpoints, logger);
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(1s);

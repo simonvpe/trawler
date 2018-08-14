@@ -75,27 +75,23 @@ SCENARIO("configuration")
     CHECK(websocket_client_service.ssl == false);
   }
 
-  GIVEN("a pipeline")
+  GIVEN("an endpoint")
   {
     const auto configuration = trawler::parse_configuration(R"#(
-    pipelines:
-      - name: my-pipeline
-        pipeline: endpoint
+    endpoints:
+      - name: my-endpoint
         source: some-source
         event: some-event
         data: some-data
     )#");
-    const auto pipelines = configuration.pipelines;
-    REQUIRE(pipelines.size( ) == 1);
+    const auto endpoints = configuration.endpoints;
+    REQUIRE(endpoints.size( ) == 1);
 
-    const auto pipeline = pipelines.front( );
-    REQUIRE(std::holds_alternative<trawler::config::endpoint_pipeline_t>(pipeline));
+    const auto endpoint = endpoints.front( );
 
-    const auto endpoint_pipeline = std::get<trawler::config::endpoint_pipeline_t>(pipeline);
-    CHECK(endpoint_pipeline.name == "my-pipeline");
-    CHECK(endpoint_pipeline.pipeline == "endpoint");
-    CHECK(endpoint_pipeline.source == "some-source");
-    CHECK(endpoint_pipeline.event == "some-event");
-    CHECK(endpoint_pipeline.data == "some-data");
+    CHECK(endpoint.name == "my-endpoint");
+    CHECK(endpoint.source == "some-source");
+    CHECK(endpoint.event == "some-event");
+    CHECK(endpoint.data == "some-data");
   }
 }

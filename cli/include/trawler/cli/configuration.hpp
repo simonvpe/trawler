@@ -29,8 +29,11 @@ struct pipeline_t
   std::string event = "";
 };
 
-struct endpoint_pipeline_t : public pipeline_t
+struct endpoint_t
 {
+  std::string name = "";
+  std::string source = "";
+  std::string event = "";
   std::string data;
 };
 }
@@ -38,8 +41,11 @@ struct endpoint_pipeline_t : public pipeline_t
 struct configuration_t
 {
   using service_t = std::variant<std::monostate, config::websocket_client_service_t>;
-  using pipeline_t = std::variant<std::monostate, config::endpoint_pipeline_t>;
+  using pipeline_t = std::variant<std::monostate>;
+  using endpoint_t = config::endpoint_t;
+
   std::vector<service_t> services = {};
   std::vector<pipeline_t> pipelines = {};
+  std::vector<endpoint_t> endpoints = {};
 };
 }

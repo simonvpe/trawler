@@ -5,6 +5,7 @@ add_library(trawler-cli
     src/parse-configuration.cpp
     src/spawn-services.cpp
     src/spawn-pipelines.cpp
+    src/spawn-endpoints.cpp
 )
 
 target_link_libraries(trawler-cli

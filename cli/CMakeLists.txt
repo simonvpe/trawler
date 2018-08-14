@@ -4,6 +4,7 @@ add_library(trawler-cli
     src/parse-options.cpp
     src/parse-configuration.cpp
     src/spawn-services.cpp
+    src/spawn-pipelines.cpp
 )
 
 target_link_libraries(trawler-cli
@@ -11,6 +12,7 @@ target_link_libraries(trawler-cli
     yaml-cpp
     trawler-services-websocket-client
     trawler-services-websocket-server
+    trawler-pipelines-endpoint
     trawler-logging
   PUBLIC
     Boost::program_options

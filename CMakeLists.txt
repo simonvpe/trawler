@@ -20,6 +20,7 @@ find_package(OpenSSL REQUIRED)
 
 add_subdirectory(logging)
 add_subdirectory(services)
+add_subdirectory(pipelines)
 add_subdirectory(cli)
 add_subdirectory(vendor)
 

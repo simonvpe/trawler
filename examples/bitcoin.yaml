@@ -11,11 +11,9 @@ services:
 
 pipelines:
   - name: subscribe
+    pipeline: reply
     source: bitcoin-client
     event: connected
-    tap:
-      action: reply
-      target: bitcoin-client
-      payload: { event: subscribe, channel: ticker, pair: BTCUSD }
+    data: '{ "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }'
       
   

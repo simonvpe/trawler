@@ -24,15 +24,21 @@ struct websocket_client_service_t : public service_t
 struct pipeline_t
 {
   std::string name = "";
+  std::string pipeline = "";
   std::string source = "";
   std::string event = "";
 };
+
+struct endpoint_pipeline_t : public pipeline_t
+{
+  std::string data;
 };
+}
 
 struct configuration_t
 {
   using service_t = std::variant<std::monostate, config::websocket_client_service_t>;
-  using pipeline_t = config::pipeline_t;
+  using pipeline_t = std::variant<std::monostate, config::endpoint_pipeline_t>;
   std::vector<service_t> services = {};
   std::vector<pipeline_t> pipelines = {};
 };

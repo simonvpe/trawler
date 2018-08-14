@@ -3,6 +3,7 @@
 #include <string>
 #include <trawler/cli/parse-configuration.hpp>
 #include <trawler/cli/parse-options.hpp>
+#include <trawler/cli/spawn-pipelines.hpp>
 #include <trawler/cli/spawn-services.hpp>
 #include <trawler/logging/logger.hpp>
 #include <trawler/services/service-context.hpp>
@@ -113,6 +114,8 @@ main(int argc, const char* argv[])
   auto context = make_service_context( );
 
   auto services = spawn_services(context, configuration.services, logger);
+
+  auto pipelines = spawn_pipelines(context, configuration.pipelines, logger);
 
   return 0;
 }

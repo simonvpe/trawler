@@ -80,16 +80,22 @@ SCENARIO("configuration")
     const auto configuration = trawler::parse_configuration(R"#(
     pipelines:
       - name: my-pipeline
+        pipeline: endpoint
         source: some-source
         event: some-event
+        data: some-data
     )#");
     const auto pipelines = configuration.pipelines;
     REQUIRE(pipelines.size( ) == 1);
 
     const auto pipeline = pipelines.front( );
+    REQUIRE(std::holds_alternative<trawler::config::endpoint_pipeline_t>(pipeline));
 
-    CHECK(pipeline.name == "my-pipeline");
-    CHECK(pipeline.source == "some-source");
-    CHECK(pipeline.event == "some-event");
+    const auto endpoint_pipeline = std::get<trawler::config::endpoint_pipeline_t>(pipeline);
+    CHECK(endpoint_pipeline.name == "my-pipeline");
+    CHECK(endpoint_pipeline.pipeline == "endpoint");
+    CHECK(endpoint_pipeline.source == "some-source");
+    CHECK(endpoint_pipeline.event == "some-event");
+    CHECK(endpoint_pipeline.data == "some-data");
   }
 }

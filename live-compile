@@ -19,12 +19,11 @@ while true; do
          && cmake .. \
 		  --graphviz=trawler.dot \
 		  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-		  -DCMAKE_CXX_CLANG_TIDY="$clang_tidy" \
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DTRAWLER_ENABLE_SANITIZERS=ON \
 	 && make -j`nproc` \
 	 && CTEST_OUTPUT_ON_FAILURE=1 ctest .. \
-	 && ./cli/trawler ../examples/bitcoin.yaml)
+	 && ./cli/trawler --loglevel debug ../examples/bitcoin.yaml)
     inotifywait -e modify `files`
 done
 

@@ -12,13 +12,6 @@ target_include_directories(rxcpp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/RxCpp/Rx/
 add_library(rapidjson INTERFACE)
 target_include_directories(rapidjson INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include)
 
-# Fmt
-add_subdirectory(fmt)
-set_target_properties(fmt
-    PROPERTIES
-      CXX_CLANG_TIDY ""
-)
-
 # Spdlog
 set(SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "Disable building spdlog examples")
 set(SPDLOG_BUILD_TESTING OFF CACHE BOOL "Disable building spdlog tests")
@@ -33,3 +26,7 @@ set_target_properties(yaml-cpp
   PROPERTIES
     CXX_CLANG_TIDY ""
 )
+
+# inja
+set(BUILD_UNIT_TESTS OFF)
+add_subdirectory(inja)

@@ -18,11 +18,15 @@ spawn_services(const std::shared_ptr<ServiceContext>& context,
   auto visit_websocket_client = [&](const config::websocket_client_service_t& service) {
     if (service.ssl) {
       logger.info("Creating websocket ssl client [" + service.name + "]");
-      auto client = create_websocket_client_ssl(context, service.host, service.port, service.target, { service.name });
+      auto client = create_websocket_client_ssl(context, service.host, service.port, service.target, { service.name })
+                      .publish( )
+                      .ref_count( );
       offspring.push_back({ service.name, std::move(client) });
     } else {
       logger.info("Creating websocket client [" + service.name + "]");
-      auto client = create_websocket_client(context, service.host, service.port, service.target, { service.name });
+      auto client = create_websocket_client(context, service.host, service.port, service.target, { service.name })
+                      .publish( )
+                      .ref_count( );
       offspring.push_back({ service.name, std::move(client) });
     }
   };

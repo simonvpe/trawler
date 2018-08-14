@@ -32,16 +32,20 @@ spawn_endpoints(const std::shared_ptr<class ServiceContext>& context,
 
     auto service = find_if(cbegin(services), cend(services), predicate);
     if (service != cend(services)) {
+      logger.info("Creating endpoint [" + endpoint.name + "]");
       auto endpoint_obj = create_endpoint(endpoint.data, { endpoint.name });
       auto subscription = service->second.filter(filter).subscribe(std::move(endpoint_obj));
       subscriptions.push_back(std::move(subscription));
+      continue;
     }
 
     auto pipeline = find_if(cbegin(pipelines), cend(pipelines), predicate);
     if (pipeline != cend(pipelines)) {
+      logger.info("Creating endpoint [" + endpoint.name + "]");
       auto endpoint_obj = create_endpoint(endpoint.data, { endpoint.name });
       auto subscription = pipeline->second.filter(filter).subscribe(std::move(endpoint_obj));
       subscriptions.push_back(std::move(subscription));
+      continue;
     }
   }
   return subscriptions;

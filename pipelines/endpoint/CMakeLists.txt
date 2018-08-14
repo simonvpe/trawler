@@ -20,3 +20,5 @@ target_include_directories(trawler-pipelines-endpoint
 )
 
 trawler_add_sanitizers(trawler-pipelines-endpoint)
+
+set_target_properties(trawler-pipelines-endpoint PROPERTIES CXX_STANDARD 17)

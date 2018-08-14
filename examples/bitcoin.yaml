@@ -9,11 +9,19 @@ services:
     target: /ws
     ssl: true
 
+pipelines:
+  - name: inja-pipeline
+    pipeline: inja
+    source: bitcoin-client
+    event: data
+    template: "Hello World"
+    
 endpoints:
   - name: subscribe
-    pipeline: endpoint
     source: bitcoin-client
     event: connected
     data: '{ "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }'
-      
+  - name: terminate
+    source: inja-pipeline
+    event: data
   

@@ -25,6 +25,7 @@ public:
 
 Logger::Logger(const std::string& label)
   : backend{ std::make_shared<LoggerBackend>(label) }
+  , label{ label }
 {
   backend->register_and_init( );
 }
@@ -51,6 +52,12 @@ Logger::debug(const std::string& s) const
   if (backend) {
     backend->debug(s);
   }
+}
+
+const std::string&
+Logger::get_label( ) const
+{
+  return label;
 }
 
 void

@@ -22,7 +22,6 @@ while true; do
 		  -DCMAKE_BUILD_TYPE=Debug \
 		  -DTRAWLER_ENABLE_SANITIZERS=ON \
 	 && make -j`nproc` \
-	 && CTEST_OUTPUT_ON_FAILURE=1 ctest .. \
 	 && ./cli/trawler --loglevel debug ../examples/bitcoin.yaml)
     inotifywait -e modify `files`
 done

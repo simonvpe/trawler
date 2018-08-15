@@ -122,10 +122,10 @@ main(int argc, const char* argv[])
 
   auto is_subscribed = [](const auto& sub) { return sub.is_subscribed( ); };
 
-  while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
-    using namespace std::chrono_literals;
-    std::this_thread::yield( );
-    std::this_thread::sleep_for(100ms);
-  }
+  // while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
+  using namespace std::chrono_literals;
+  std::this_thread::yield( );
+  std::this_thread::sleep_for(5s);
+  //}
   return 0;
 }

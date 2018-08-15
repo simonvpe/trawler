@@ -40,6 +40,23 @@ struct convert<trawler::config::inja_pipeline_t>
 };
 
 /*******************************************************************************
+ * convert jq_pipeline_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::jq_pipeline_t>
+{
+  static bool decode(const Node& node, trawler::config::jq_pipeline_t& pipe)
+  {
+    pipe.name = node["name"].as<std::string>( );
+    pipe.pipeline = node["pipeline"].as<std::string>( );
+    pipe.source = node["source"].as<std::string>( );
+    pipe.event = node["event"].as<std::string>( );
+    pipe.script = node["script"].as<std::string>( );
+    return true;
+  }
+};
+
+/*******************************************************************************
  * convert endpoint_t
  *******************************************************************************/
 template<>
@@ -79,6 +96,9 @@ struct convert<trawler::configuration_t>
     for (const auto& pipe : node["pipelines"]) {
       if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "inja") {
         config.pipelines.emplace_back(pipe.as<trawler::config::inja_pipeline_t>( ));
+      }
+      if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "jq") {
+        config.pipelines.emplace_back(pipe.as<trawler::config::jq_pipeline_t>( ));
       }
     }
 

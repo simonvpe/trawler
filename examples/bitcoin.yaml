@@ -10,11 +10,17 @@ services:
     ssl: true
 
 pipelines:
-  - name: inja-pipeline
-    pipeline: inja
+  - name: jq-pipeline
+    pipeline: jq
     source: bitcoin-client
     event: data
-    template: "Hello World {{ payload }}"
+    script: .
+  - name: inja-pipeline
+    pipeline: inja
+    source: jq-pipeline
+    event: data
+    template: |
+      Hello World {{ payload }}
     
 endpoints:
   - name: subscribe

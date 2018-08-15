@@ -5,6 +5,7 @@ namespace trawler {
 class Logger
 {
   std::shared_ptr<class LoggerBackend> backend;
+  const std::string& label;
 
 public:
   enum class ELogLevel
@@ -25,6 +26,8 @@ public:
   void debug(const std::string&) const;
   void info(const std::string&) const;
   void critical(const std::string&) const;
+
+  const std::string& get_label( ) const;
 
   static void set_log_level(ELogLevel);
 };

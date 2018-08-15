@@ -16,3 +16,6 @@
 [submodule "vendor/inja"]
 	path = vendor/inja
 	url = https://github.com/pantor/inja.git
+[submodule "vendor/json"]
+	path = vendor/json
+	url = https://github.com/nlohmann/json.git

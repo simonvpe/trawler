@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+D=`dirname $0`
+pipeline_name=$1
+
+pipelinedir="${D}/pipelines"
+topdir="${pipelinedir}/${pipeline_name}"
+srcdir="${topdir}/src"
+includedir="${topdir}/include/trawler/pipelines/${pipeline_name}"
+
+mkdir -p "${srcdir}" "${includedir}"
+
+grep "add_subdirectory(${pipeline_name})" "${pipelinedir}/CMakeLists.txt" &>/dev/null \
+    || echo "add_subdirectory(${pipeline_name})" >> "${pipelinedir}/CMakeLists.txt"
+
+cat <<EOF > "${topdir}/CMakeLists.txt"
+add_library(trawler-pipelines-${pipeline_name}
+  STATIC
+    src/${pipeline_name}.cpp
+)
+
+target_link_libraries(trawler-pipelines-${pipeline_name}
+  PUBLIC
+    trawler-services-base
+    trawler-logging
+    rxcpp
+)
+
+target_include_directories(trawler-pipelines-${pipeline_name}
+  PUBLIC
+    \$<INSTALL_INTERFACE:include>
+    \$<BUILD_INTERFACE:\${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PRIVATE
+    \${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+set_target_properties(trawler-pipelines-${pipeline_name} PROPERTIES CXX_STANDARD 17)
+
+trawler_add_sanitizers(trawler-pipelines-${pipeline_name})
+EOF
+
+cat <<EOF > "${includedir}/${pipeline_name}.hpp"
+#pragma once
+#include <functional>
+#include <trawler/logging/logger.hpp>
+#include <trawler/services/service-packet.hpp>
+
+namespace trawler {
+std::function<ServicePacket(ServicePacket)>
+create_${pipeline_name}_pipeline(const Logger& logger = { "inja" });
+}
+EOF
+
+cat <<EOF > "${srcdir}/${pipeline_name}.cpp"
+#include <trawler/pipelines/${pipeline_name}/${pipeline_name}.hpp>
+
+namespace trawler {
+
+std::function<ServicePacket(ServicePacket)>
+create_${pipeline_name}_pipeline(const Logger& logger)
+{
+  return [=](const auto& x) { return x; };
+}
+}
+EOF

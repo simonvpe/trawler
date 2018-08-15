@@ -120,7 +120,12 @@ main(int argc, const char* argv[])
 
   auto subscriptions = spawn_endpoints(context, services, pipelines, configuration.endpoints, logger);
 
-  using namespace std::chrono_literals;
-  std::this_thread::sleep_for(1s);
+  auto is_subscribed = [](const auto& sub) { return sub.is_subscribed( ); };
+
+  while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
+    using namespace std::chrono_literals;
+    std::this_thread::yield( );
+    std::this_thread::sleep_for(100ms);
+  }
   return 0;
 }

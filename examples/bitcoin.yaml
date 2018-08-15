@@ -6,7 +6,7 @@ services:
     service: websocket-client
     host: api.bitfinex.com
     port: 443
-    target: /ws
+    target: /ws/2
     ssl: true
 
 pipelines:
@@ -14,7 +14,7 @@ pipelines:
     pipeline: inja
     source: bitcoin-client
     event: data
-    template: "Hello World"
+    template: "Hello World {{ payload }}"
     
 endpoints:
   - name: subscribe

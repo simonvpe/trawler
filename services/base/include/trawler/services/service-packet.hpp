@@ -48,5 +48,10 @@ public:
     , payload{ std::move(payload) }
     , on_reply{ std::move(on_reply) }
   {}
+
+  ServicePacket with_payload(payload_t payload) const
+  {
+    return ServicePacket{ this->status, std::move(payload), this->on_reply };
+  }
 };
 }

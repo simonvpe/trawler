@@ -4,6 +4,9 @@ add_library(trawler-pipelines-inja
 )
 
 target_link_libraries(trawler-pipelines-inja
+  PRIVATE
+    inja
+    nlohmann_json
   PUBLIC
     trawler-services-base
     trawler-logging
@@ -17,5 +20,7 @@ target_include_directories(trawler-pipelines-inja
   PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/src
 )
+
+set_target_properties(trawler-pipelines-inja PROPERTIES CXX_STANDARD 17)
 
 trawler_add_sanitizers(trawler-pipelines-inja)

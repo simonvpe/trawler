@@ -6,12 +6,6 @@ add_subdirectory(doctest)
 add_library(rxcpp INTERFACE)
 target_include_directories(rxcpp INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/RxCpp/Rx/v2/src)
 
-# Rapidjson
-# Rapidjson isn't well behaved either, we provide our own
-# wrapper library again
-add_library(rapidjson INTERFACE)
-target_include_directories(rapidjson INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/rapidjson/include)
-
 # Spdlog
 set(SPDLOG_BUILD_EXAMPLES OFF CACHE BOOL "Disable building spdlog examples")
 set(SPDLOG_BUILD_TESTING OFF CACHE BOOL "Disable building spdlog tests")
@@ -30,3 +24,7 @@ set_target_properties(yaml-cpp
 # inja
 set(BUILD_UNIT_TESTS OFF)
 add_subdirectory(inja)
+
+# json
+set(JSON_BuildTests OFF)
+add_subdirectory(json)

@@ -13,3 +13,4 @@ endfunction()
 
 add_subdirectory(services)
 add_subdirectory(cli)
+add_subdirectory(pipelines)

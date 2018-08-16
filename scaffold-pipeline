@@ -9,11 +9,37 @@ pipelinedir="${D}/pipelines"
 topdir="${pipelinedir}/${pipeline_name}"
 srcdir="${topdir}/src"
 includedir="${topdir}/include/trawler/pipelines/${pipeline_name}"
+testtopdir="${D}/test/pipelines"
+testdir="${testtopdir}/${pipeline_name}"
 
-mkdir -p "${srcdir}" "${includedir}"
+mkdir -p "${srcdir}" "${includedir}" "${testdir}"
 
 grep "add_subdirectory(${pipeline_name})" "${pipelinedir}/CMakeLists.txt" &>/dev/null \
     || echo "add_subdirectory(${pipeline_name})" >> "${pipelinedir}/CMakeLists.txt"
+
+grep "add_subdirectory(${pipeline_name})" "${testtopdir}/CMakeLists.txt" &>/dev/null \
+    || echo "add_subdirectory(${pipeline_name})" >> "${testtopdir}/CMakeLists.txt"
+
+cat <<EOF >"${testdir}/CMakeLists.txt"
+trawler_add_test(
+  TEST
+    trawler-pipelines-${pipeline_name}
+  SOURCES
+    test.cpp
+  LIBS
+    trawler-pipelines-${pipeline_name}
+    doctest)
+EOF
+
+cat <<EOF >"${testdir}/test.cpp"
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <trawler/pipelines/${pipeline_name}/${pipeline_name}.hpp>
+
+SCENARIO("dummy ${pipeline_name}") {}
+EOF
+
+exit 0
 
 cat <<EOF > "${topdir}/CMakeLists.txt"
 add_library(trawler-pipelines-${pipeline_name}

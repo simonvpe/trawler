@@ -29,7 +29,9 @@ compile_script(std::weak_ptr<jq_state> jqw, const std::string& script, const std
 
   jq_set_attr(jq, jv_string("PROGRAM_ORIGIN"), jv_string(name.c_str( )));
 
-  const auto compiled = jq_compile_args(jq, script.c_str( ), jv_array( ));
+  auto array = jv_array( );
+  const auto compiled = jq_compile_args(jq, script.c_str( ), array);
+  jv_free(array);
 
   if (!compiled) {
     throw std::runtime_error("Failed to compile jq script in " + name);

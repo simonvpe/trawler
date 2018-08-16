@@ -20,7 +20,7 @@ while true; do
 		  --graphviz=trawler.dot \
 		  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
 		  -DCMAKE_BUILD_TYPE=Debug \
-		  -DTRAWLER_ENABLE_SANITIZERS=ON \
+		  -DTRAWLER_ENABLE_SANITIZERS=OFF \
 	 && make -j`nproc` \
 	 && ./cli/trawler --loglevel debug ../examples/bitcoin.yaml)
     inotifywait -e modify `files`

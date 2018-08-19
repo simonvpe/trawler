@@ -1,11 +1,11 @@
 #pragma once
 
 #include <boost/asio/ip/tcp.hpp>
+#include <rxcpp/rx.hpp>
 #include <string>
 #include <trawler/logging/logger.hpp>
 #include <trawler/services/service-context.hpp>
 #include <trawler/services/websocket-common/make-runtime-error.hpp>
-#include <rxcpp/rx.hpp>
 
 namespace trawler {
 /*******************************************************************************
@@ -24,8 +24,8 @@ make_address_resolver(const std::shared_ptr<ServiceContext>& context,
 
     auto resolver = std::make_shared<tcp::resolver>(context->get_session_context( ));
 
-    auto on_subscribe = [=](auto subscriber) {
-      auto on_resolve = [=](error_t ec, const result_t& results) {
+    auto on_subscribe = [resolver, logger, host, port](auto subscriber) {
+      auto on_resolve = [resolver, logger, subscriber](error_t ec, const result_t& results) {
         if (ec) {
           logger.critical("Address resolution failed");
           subscriber.on_error(make_runtime_error(ec));

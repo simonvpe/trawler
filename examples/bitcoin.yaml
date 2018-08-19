@@ -14,7 +14,7 @@ pipelines:
     pipeline: jq
     source: bitcoin-client
     event: data
-    script: .
+    script: "{ paaayload: (.) }"
   - name: inja-pipeline
     pipeline: inja
     source: jq-pipeline

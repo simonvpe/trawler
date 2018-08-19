@@ -44,7 +44,7 @@ make_jq_visitor(const services_t& services, pipelines_t& pipelines, const Logger
   return [&](const config::jq_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     auto source = find_source(services, pipelines, pipe.source);
-    auto observer = source.map(create_jq_pipeline(pipe.script, { pipe.name })).as_dynamic( );
+    auto observer = source.flat_map(create_jq_pipeline(pipe.script, { pipe.name })).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }

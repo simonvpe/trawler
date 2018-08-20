@@ -1,3 +1,4 @@
+#include "make-tcp-listener.hpp"
 #include <trawler/services/service-context.hpp>
 #include <trawler/services/websocket-common/make-runtime-error.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>
@@ -11,7 +12,6 @@ using acceptor_t = boost::asio::ip::tcp::acceptor;
 using acceptor_tp = std::shared_ptr<acceptor_t>;
 using context_t = ServiceContext;
 using context_tp = std::shared_ptr<ServiceContext>;
-using endpoint_t = boost::asio::ip::tcp::endpoint;
 using error_t = boost::system::error_code;
 using host_t = std::string;
 using logger_t = Logger;
@@ -21,53 +21,6 @@ using socket_tp = std::shared_ptr<socket_t>;
 using strand_t = boost::asio::strand<boost::asio::io_context::executor_type>;
 using stream_t = boost::beast::websocket::stream<tcp::socket>;
 using stream_tp = std::shared_ptr<stream_t>;
-
-/*******************************************************************************
- * make_tcp_listener
- ******************************************************************************/
-auto
-make_tcp_listener(const context_tp& context, const logger_t& logger, const host_t& host, const port_t port)
-{
-  return [=] {
-    using result_t = acceptor_tp;
-
-    auto on_subscribe = [=](auto subscriber) {
-      auto acceptor = std::make_shared<acceptor_t>(context->get_session_context( ));
-
-      boost::system::error_code ec;
-      auto endpoint = endpoint_t{ boost::asio::ip::make_address(host), port };
-
-      acceptor->open(endpoint.protocol( ), ec);
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-
-      acceptor->set_option(boost::asio::socket_base::reuse_address(true), ec);
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-
-      acceptor->bind(endpoint, ec);
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-
-      acceptor->listen(boost::asio::socket_base::max_listen_connections, ec);
-      if (ec) {
-        subscriber.on_error(make_runtime_error(ec));
-        return;
-      }
-
-      logger.info("Listening for connections");
-      subscriber.on_next(acceptor);
-      subscriber.on_completed( );
-    };
-    return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
-  };
-}
 
 /*******************************************************************************
  * make_tcp_acceptor

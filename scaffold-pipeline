@@ -39,8 +39,6 @@ cat <<EOF >"${testdir}/test.cpp"
 SCENARIO("dummy ${pipeline_name}") {}
 EOF
 
-exit 0
-
 cat <<EOF > "${topdir}/CMakeLists.txt"
 add_library(trawler-pipelines-${pipeline_name}
   STATIC

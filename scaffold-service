@@ -1,0 +1,90 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+D=`dirname $0`
+service_name=$1
+
+servicedir="${D}/services"
+topdir="${servicedir}/${service_name}"
+srcdir="${topdir}/src"
+includedir="${topdir}/include/trawler/services/${service_name}"
+testtopdir="${D}/test/services"
+testdir="${testtopdir}/${service_name}"
+
+mkdir -p "${srcdir}" "${includedir}" "${testdir}"
+
+grep "add_subdirectory(${service_name})" "${servicedir}/CMakeLists.txt" &>/dev/null \
+    || echo "add_subdirectory(${service_name})" >> "${servicedir}/CMakeLists.txt"
+
+grep "add_subdirectory(${service_name})" "${testtopdir}/CMakeLists.txt" &>/dev/null \
+    || echo "add_subdirectory(${service_name})" >> "${testtopdir}/CMakeLists.txt"
+
+cat <<EOF >"${testdir}/CMakeLists.txt"
+trawler_add_test(
+  TEST
+    trawler-services-${service_name}
+  SOURCES
+    test.cpp
+  LIBS
+    trawler-services-${service_name}
+    doctest)
+EOF
+
+cat <<EOF >"${testdir}/test.cpp"
+#define DOCTEST_CONFIG_IMPLEMENT_WITH_MAIN
+#include <doctest.h>
+#include <trawler/services/${service_name}/${service_name}.hpp>
+
+SCENARIO("dummy ${service_name}") {}
+EOF
+
+cat <<EOF > "${topdir}/CMakeLists.txt"
+add_library(trawler-services-${service_name}
+  STATIC
+    src/${service_name}.cpp
+)
+
+target_link_libraries(trawler-services-${service_name}
+  PUBLIC
+    trawler-services-base
+    trawler-logging
+    rxcpp
+)
+
+target_include_directories(trawler-services-${service_name}
+  PUBLIC
+    \$<INSTALL_INTERFACE:include>
+    \$<BUILD_INTERFACE:\${CMAKE_CURRENT_SOURCE_DIR}/include>
+  PRIVATE
+    \${CMAKE_CURRENT_SOURCE_DIR}/src
+)
+
+set_target_properties(trawler-services-${service_name} PROPERTIES CXX_STANDARD 17)
+
+trawler_add_sanitizers(trawler-services-${service_name})
+EOF
+
+cat <<EOF > "${includedir}/${service_name}.hpp"
+#pragma once
+#include <rxcpp/rx.hpp>
+#include <trawler/logging/logger.hpp>
+
+namespace trawler {
+
+rxcpp::observable<class ServicePacket>
+create_${service_name/-/_}(const Logger& logger = { "${service_name}" });
+}
+EOF
+
+cat <<EOF > "${srcdir}/${service_name}.cpp"
+#include <trawler/services/${service_name}/${service_name}.hpp>
+
+namespace trawler {
+
+rxcpp::observable<class ServicePacket>
+create_${service_name/-/_}(const Logger& logger) {
+  return rxcpp::observable<>::create<ServicePacket>([](auto subscriber){});
+}
+}
+EOF

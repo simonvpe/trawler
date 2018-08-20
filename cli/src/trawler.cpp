@@ -59,6 +59,32 @@ configure_loglevel(const std::string& loglevel)
   return std::make_exception_ptr(std::runtime_error{ "unknown loglevel " + loglevel });
 }
 
+template<typename TimeDelta>
+void
+wait_for_unsubscribe(std::vector<rxcpp::subscription>& subscriptions, TimeDelta timeout)
+{
+  using namespace std::chrono_literals;
+  auto is_subscribed = [](const auto& sub) { return sub.is_subscribed( ); };
+  auto unsubscribe = [](auto& sub) { sub.unsubscribe( ); };
+
+  const auto stop_time = std::chrono::system_clock::now( ) + timeout;
+
+  while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
+    if (timeout > 0ns && std::chrono::system_clock::now( ) > stop_time) {
+      std::for_each(begin(subscriptions), end(subscriptions), unsubscribe);
+    }
+    std::this_thread::yield( );
+    std::this_thread::sleep_for(100ms);
+  }
+}
+
+void
+wait_for_unsubscribe(std::vector<rxcpp::subscription>& subscriptions)
+{
+  using namespace std::chrono_literals;
+  wait_for_unsubscribe(subscriptions, 0ms);
+}
+
 int
 main(int argc, const char* argv[]) // NOLINT(readability-function-size)
 {
@@ -118,12 +144,8 @@ main(int argc, const char* argv[]) // NOLINT(readability-function-size)
 
   auto subscriptions = spawn_endpoints(services, pipelines, configuration.endpoints, logger);
 
-  auto is_subscribed = [](const auto& sub) { return sub.is_subscribed( ); };
+  using namespace std::chrono_literals;
+  wait_for_unsubscribe(subscriptions, 2s);
 
-  while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
-    using namespace std::chrono_literals;
-    std::this_thread::yield( );
-    std::this_thread::sleep_for(100ms);
-  }
   return 0;
 }

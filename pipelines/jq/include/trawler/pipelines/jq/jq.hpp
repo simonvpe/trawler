@@ -27,29 +27,36 @@ make_jv_parser(int flags)
   return std::shared_ptr<jv_parser>(jv_parser_new(flags), deleter);
 }
 
+struct jv_guard
+{
+  jv value;
+  jv_guard(jv value)
+    : value{ std::move(value) }
+  {}
+  ~jv_guard( ) { jv_free(value); }
+  operator jv( ) { return value; }
+};
+
 auto
 create_jq_pipeline(const std::string& script, const Logger& logger = { "jq" })
 {
+  auto jq = trawler::make_jq_state( );
+  auto args = jv_array( );
+  jq_set_attr(jq.get( ), jv_string("PROGRAM_ORIGIN"), jv_string("myprog"));
+
+  const auto compiled = jq_compile_args(jq.get( ), script.c_str( ), args);
+  if (!compiled) {
+    throw std::runtime_error{ "Failed to compile jq script" };
+  }
+
   return [=](const ServicePacket& input) {
-    auto jq = trawler::make_jq_state( );
-    auto args = jv_array( );
-    jq_set_attr(jq.get( ), jv_string("PROGRAM_ORIGIN"), jv_string("myprog"));
-
     return rxcpp::observable<>::create<ServicePacket>([=](auto subscriber) {
-      const auto compiled = jq_compile_args(jq.get( ), script.c_str( ), args);
-      jv_free(args);
-
-      if (!compiled) {
-        logger.critical("Failed to compile jq script");
-        subscriber.on_error(std::make_exception_ptr(std::runtime_error("Failed to compile jq script")));
-        return;
-      }
-
       auto parser = make_jv_parser(0);
       jv_parser_set_buf(parser.get( ), input.get_payload( ).c_str( ), input.get_payload( ).size( ), 0);
 
       while (true) {
         auto value = jv_parser_next(parser.get( ));
+
         if (!jv_is_valid(value)) {
           break;
         }
@@ -62,16 +69,13 @@ create_jq_pipeline(const std::string& script, const Logger& logger = { "jq" })
             break;
           }
 
-          auto dump = jv_dump_string(result, 0);
+          auto dump = jv_guard{ jv_dump_string(result, 0) };
           auto result_string = std::string{ jv_string_value(dump) };
 
           if (result_string != "null") {
             subscriber.on_next(input.with_payload(result_string));
           }
-          // jv_free(dump);
-          jv_free(result);
         }
-        jv_free(value);
       }
       subscriber.on_completed( );
     });

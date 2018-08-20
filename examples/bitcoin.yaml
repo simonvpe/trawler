@@ -10,23 +10,69 @@ services:
     ssl: true
 
 pipelines:
+  # Filter out messages looking like [x, [y, z, ...]]. Those are the ticker values, the
+  # rest is uninteresting. Then store each value under keys in a json object.
   - name: jq-pipeline
     pipeline: jq
     source: bitcoin-client
     event: data
-    script: "{ paaayload: (.) }"
+    script: |
+      . | arrays | .[1] | arrays | {
+        bid:               .[0],
+        bid_size:          .[1],
+        ask:               .[2],
+        ask_size:          .[3],
+        daily_change:      .[4],
+        daily_change_perc: .[5],
+        last_price:        .[6],
+        volume:            .[7],
+        high:              .[8],
+        low:               .[9]
+      }
+
+  # Render the bitcoin data into a nice webpage using the inja template engine.
   - name: inja-pipeline
     pipeline: inja
     source: jq-pipeline
     event: data
     template: |
-      Hello World {{ payload }}
-    
+      <table>
+        <tr>
+          <th>Bid</th>
+          <th>Bid Size</th>
+          <th>Ask</th>
+          <th>Ask Size</th>
+          <th>Daily Change</th>
+          <th>Daily Change (%)</th>
+          <th>Last Price</th>
+          <th>Volume</th>
+          <th>High</th>
+          <th>Low</th>
+        </tr>
+        <tr>
+          <th>{{ payload/bid               }}</th>
+          <th>{{ payload/bid_size          }}</th>
+          <th>{{ payload/ask               }}</th>
+          <th>{{ payload/ask_size          }}</th>
+          <th>{{ payload/daily_change      }}</th>
+          <th>{{ payload/daily_change_perc }}</th>
+          <th>{{ payload/last_price        }}</th>
+          <th>{{ payload/volume            }}</th>
+          <th>{{ payload/high              }}</th>
+          <th>{{ payload/low               }}</th>
+        </tr>
+      </table>
+
+#  - name: value-buffer
+#    pipeline: buffer
+#    source:         
+  
 endpoints:
   - name: subscribe
     source: bitcoin-client
     event: connected
     data: '{ "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }'
+
   - name: terminate
     source: inja-pipeline
     event: data

@@ -144,8 +144,7 @@ main(int argc, const char* argv[]) // NOLINT(readability-function-size)
 
   auto subscriptions = spawn_endpoints(services, pipelines, configuration.endpoints, logger);
 
-  using namespace std::chrono_literals;
-  wait_for_unsubscribe(subscriptions, 2s);
+  wait_for_unsubscribe(subscriptions);
 
   return 0;
 }

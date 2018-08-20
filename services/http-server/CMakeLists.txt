@@ -8,6 +8,7 @@ target_link_libraries(trawler-services-http-server
     trawler-services-base
     trawler-services-tcp-common
     trawler-logging
+    nlohmann_json
     rxcpp
 )
 

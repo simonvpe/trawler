@@ -5,8 +5,7 @@
 namespace trawler {
 
 std::vector<rxcpp::subscription>
-spawn_endpoints(const std::shared_ptr<class ServiceContext>& context,
-                const std::vector<std::pair<std::string, rxcpp::observable<ServicePacket>>>& services,
+spawn_endpoints(const std::vector<std::pair<std::string, rxcpp::observable<ServicePacket>>>& services,
                 const std::vector<std::pair<std::string, rxcpp::observable<ServicePacket>>>& pipelines,
                 const std::vector<configuration_t::endpoint_t>& endpoint_config,
                 const Logger& logger)
@@ -18,16 +17,9 @@ spawn_endpoints(const std::shared_ptr<class ServiceContext>& context,
     auto predicate = [name = endpoint.source](auto thing) { return thing.first == name; };
 
     auto filter = [event = endpoint.event](const ServicePacket& sp) {
-      if (event == "connected") {
-        return sp.get_status( ) == ServicePacket::EStatus::CONNECTED;
-      }
-      if (event == "data") {
-        return sp.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION;
-      }
-      if (event == "disconnected") {
-        return sp.get_status( ) == ServicePacket::EStatus::DISCONNECTED;
-      }
-      return true;
+      return (event == "connected" && sp.get_status( ) == ServicePacket::EStatus::CONNECTED) ||
+             (event == "data" && sp.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION) ||
+             (event == "disconnected" && sp.get_status( ) == ServicePacket::EStatus::DISCONNECTED);
     };
 
     auto service = find_if(cbegin(services), cend(services), predicate);

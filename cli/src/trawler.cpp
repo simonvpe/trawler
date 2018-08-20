@@ -33,16 +33,14 @@ std::tuple<std::string, std::exception_ptr>
 get_config_file(const boost::program_options::variables_map& vm)
 {
   if (vm.count("config") < 1) {
-    return { {}, std::make_exception_ptr(std::runtime_error{ "no configuration-file specified" }) };
+    return { "", std::make_exception_ptr(std::runtime_error{ "no configuration-file specified" }) };
   }
   return { vm["config"].as<std::vector<std::string>>( ).front( ), nullptr };
 }
 
 std::exception_ptr
-configure_loglevel(const boost::program_options::variables_map& vm)
+configure_loglevel(const std::string& loglevel)
 {
-  const auto loglevel = vm["loglevel"].as<std::string>( );
-
   if (loglevel == "info") {
     Logger::set_log_level(Logger::ELogLevel::INFO);
     return nullptr;
@@ -62,7 +60,7 @@ configure_loglevel(const boost::program_options::variables_map& vm)
 }
 
 int
-main(int argc, const char* argv[])
+main(int argc, const char* argv[]) // NOLINT(readability-function-size)
 {
   Logger logger{ "trawler" };
 
@@ -80,7 +78,7 @@ main(int argc, const char* argv[])
   }
 
   {
-    const auto err = configure_loglevel(vm);
+    const auto err = configure_loglevel(vm["loglevel"].as<std::string>( ));
     if (err) {
       print_usage(std::cerr, description);
       print_exception(err);
@@ -116,16 +114,16 @@ main(int argc, const char* argv[])
 
   auto services = spawn_services(context, configuration.services, logger);
 
-  auto pipelines = spawn_pipelines(context, services, configuration.pipelines, logger);
+  auto pipelines = spawn_pipelines(services, configuration.pipelines, logger);
 
-  auto subscriptions = spawn_endpoints(context, services, pipelines, configuration.endpoints, logger);
+  auto subscriptions = spawn_endpoints(services, pipelines, configuration.endpoints, logger);
 
   auto is_subscribed = [](const auto& sub) { return sub.is_subscribed( ); };
 
-  // while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
-  using namespace std::chrono_literals;
-  std::this_thread::yield( );
-  std::this_thread::sleep_for(5s);
-  //}
+  while (std::all_of(cbegin(subscriptions), cend(subscriptions), is_subscribed)) {
+    using namespace std::chrono_literals;
+    std::this_thread::yield( );
+    std::this_thread::sleep_for(100ms);
+  }
   return 0;
 }

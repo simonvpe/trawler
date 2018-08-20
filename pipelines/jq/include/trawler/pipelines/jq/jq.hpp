@@ -68,7 +68,7 @@ create_jq_pipeline(const std::string& script, const Logger& logger = { "jq" })
           if (result_string != "null") {
             subscriber.on_next(input.with_payload(result_string));
           }
-          jv_free(dump);
+          // jv_free(dump);
           jv_free(result);
         }
         jv_free(value);

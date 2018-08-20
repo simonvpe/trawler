@@ -87,12 +87,24 @@ struct convert<trawler::configuration_t>
       return false;
     }
 
+    decode_services(node, config);
+    decode_pipelines(node, config);
+    decode_endpoints(node, config);
+
+    return true;
+  }
+
+  static void decode_services(const Node& node, trawler::configuration_t& config)
+  {
     for (const auto& svc : node["services"]) {
       if (svc.IsMap( ) && svc["service"].as<std::string>( ) == "websocket-client") {
         config.services.emplace_back(svc.as<trawler::config::websocket_client_service_t>( ));
       }
     }
+  }
 
+  static void decode_pipelines(const Node& node, trawler::configuration_t& config)
+  {
     for (const auto& pipe : node["pipelines"]) {
       if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "inja") {
         config.pipelines.emplace_back(pipe.as<trawler::config::inja_pipeline_t>( ));
@@ -101,14 +113,15 @@ struct convert<trawler::configuration_t>
         config.pipelines.emplace_back(pipe.as<trawler::config::jq_pipeline_t>( ));
       }
     }
+  }
 
+  static void decode_endpoints(const Node& node, trawler::configuration_t& config)
+  {
     for (const auto& endp : node["endpoints"]) {
       if (endp.IsMap( )) {
         config.endpoints.emplace_back(endp.as<trawler::config::endpoint_t>( ));
       }
     }
-
-    return true;
   }
 };
 }

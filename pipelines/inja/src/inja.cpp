@@ -14,9 +14,8 @@ create_inja_pipeline(const std::string& tmplate, const Logger& logger)
     const auto out = [tmplate, in = x.get_payload( )] {
       if (in.size( ) > 0) {
         return inja::render(tmplate, json{ { "payload", json::parse(in) } });
-      } else {
-        return std::string{};
       }
+      return std::string{};
     }( );
     logger.debug(out);
     return x.with_payload(out);

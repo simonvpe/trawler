@@ -51,8 +51,8 @@ struct endpoint_t
 
 struct configuration_t
 {
-  using service_t = std::variant<std::monostate, config::websocket_client_service_t>;
-  using pipeline_t = std::variant<std::monostate, config::inja_pipeline_t, config::jq_pipeline_t>;
+  using service_t = std::variant<config::websocket_client_service_t>;
+  using pipeline_t = std::variant<config::inja_pipeline_t, config::jq_pipeline_t>;
   using endpoint_t = config::endpoint_t;
 
   std::vector<service_t> services = {};

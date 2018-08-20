@@ -50,8 +50,7 @@ make_jq_visitor(const services_t& services, pipelines_t& pipelines, const Logger
 }
 
 pipelines_t
-spawn_pipelines(const std::shared_ptr<class ServiceContext>& context,
-                const services_t& services,
+spawn_pipelines(const services_t& services,
                 const std::vector<configuration_t::pipeline_t>& pipeline_config,
                 const Logger& logger)
 {
@@ -61,8 +60,8 @@ spawn_pipelines(const std::shared_ptr<class ServiceContext>& context,
   auto inja_visitor = make_inja_visitor(services, pipelines, logger);
   auto jq_visitor = make_jq_visitor(services, pipelines, logger);
 
-  auto visitor = overloaded{ inja_visitor, jq_visitor, [](auto) { throw std::runtime_error("Unknown pipeline"); } };
-  for (const auto& pipe : pipeline_config) {
+  auto visitor = overloaded{ std::move(inja_visitor), std::move(jq_visitor) };
+  for (const configuration_t::pipeline_t& pipe : pipeline_config) {
     std::visit(visitor, pipe);
   }
 

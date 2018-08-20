@@ -21,17 +21,17 @@ spawn_services(const std::shared_ptr<ServiceContext>& context,
       auto client = create_websocket_client_ssl(context, service.host, service.port, service.target, { service.name })
                       .publish( )
                       .ref_count( );
-      offspring.push_back({ service.name, std::move(client) });
+      offspring.emplace_back(service.name, std::move(client));
     } else {
       logger.info("Creating websocket client [" + service.name + "]");
       auto client = create_websocket_client(context, service.host, service.port, service.target, { service.name })
                       .publish( )
                       .ref_count( );
-      offspring.push_back({ service.name, std::move(client) });
+      offspring.emplace_back(service.name, std::move(client));
     }
   };
 
-  auto visitor = overloaded{ visit_websocket_client, [](auto) {} };
+  auto visitor = overloaded{ std::move(visit_websocket_client) };
   for (const auto& svc : services) {
     std::visit(visitor, svc);
   }

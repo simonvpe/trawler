@@ -4,10 +4,10 @@
 #include <boost/beast/core.hpp>
 #include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/websocket.hpp>
-#include <trawler/logging/logger.hpp>
 #include <rxcpp/rx.hpp>
+#include <trawler/logging/logger.hpp>
+#include <trawler/services/make-runtime-error.hpp>
 #include <trawler/services/service-packet.hpp>
-#include <trawler/services/websocket-common/make-runtime-error.hpp>
 
 namespace trawler {
 
@@ -60,7 +60,7 @@ make_websocket_event_loop(const std::shared_ptr<ServiceContext>& context, const 
   using stream_tp = std::shared_ptr<stream_t>;
   using strand_t = asio::strand<asio::io_context::executor_type>;
   using error_t = boost::system::error_code;
-  
+
   return [=](const stream_tp& stream) {
     using result_t = ServicePacket;
 

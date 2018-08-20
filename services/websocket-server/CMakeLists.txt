@@ -8,7 +8,8 @@ target_link_libraries(trawler-services-websocket-server
     trawler-services-base
     rxcpp
   PRIVATE
-    trawler-services-websocket-common    
+    trawler-services-websocket-common
+    trawler-services-tcp-common
 #    OpenSSL::SSL
 )
 

@@ -5,8 +5,8 @@
 #include <rxcpp/rx.hpp>
 #include <string>
 #include <trawler/logging/logger.hpp>
+#include <trawler/services/make-runtime-error.hpp>
 #include <trawler/services/service-context.hpp>
-#include <trawler/services/websocket-common/make-runtime-error.hpp>
 
 namespace trawler {
 /*******************************************************************************

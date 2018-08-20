@@ -2,7 +2,7 @@
 #include <memory>
 #include <string>
 #include <trawler/logging/logger.hpp>
-#include <trawler/services/websocket-common/make-runtime-error.hpp>
+#include <trawler/services/make-runtime-error.hpp>
 
 namespace trawler {
 /*******************************************************************************
@@ -14,7 +14,7 @@ make_websocket_handshaker(const Logger& logger, const std::string& host, const s
 {
   using stream_tp = std::shared_ptr<Stream>;
   using error_t = boost::system::error_code;
-  
+
   return [=](const stream_tp& stream) {
     using result_t = stream_tp;
 
@@ -36,5 +36,4 @@ make_websocket_handshaker(const Logger& logger, const std::string& host, const s
     return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
-
 }

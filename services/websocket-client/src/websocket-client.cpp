@@ -2,10 +2,10 @@
 #include "make-websocket-handshaker.hpp"
 #include <boost/asio/connect.hpp>
 #include <rxcpp/rx.hpp>
+#include <trawler/services/make-runtime-error.hpp>
 #include <trawler/services/service-context.hpp>
 #include <trawler/services/service-packet.hpp>
 #include <trawler/services/websocket-client/websocket-client.hpp>
-#include <trawler/services/websocket-common/make-runtime-error.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>
 
 namespace trawler {

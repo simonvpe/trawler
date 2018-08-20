@@ -1,6 +1,4 @@
-add_library(trawler-services-base
-  INTERFACE
-)
+add_library(trawler-services-base INTERFACE)
 
 target_link_libraries(trawler-services-base
   INTERFACE

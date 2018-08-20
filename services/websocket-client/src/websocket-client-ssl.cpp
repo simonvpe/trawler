@@ -1,14 +1,14 @@
+#include "load-root-certificates.hpp"
 #include "make-address-resolver.hpp"
 #include "make-websocket-handshaker.hpp"
-#include "load-root-certificates.hpp"
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ssl/stream.hpp>
 #include <boost/beast/websocket/ssl.hpp>
 #include <rxcpp/rx.hpp>
+#include <trawler/services/make-runtime-error.hpp>
 #include <trawler/services/service-context.hpp>
 #include <trawler/services/service-packet.hpp>
 #include <trawler/services/websocket-client/websocket-client.hpp>
-#include <trawler/services/websocket-common/make-runtime-error.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>
 
 namespace trawler {
@@ -21,12 +21,12 @@ using ssl_context_t = boost::asio::ssl::context;
 using ssl_context_tp = std::shared_ptr<ssl_context_t>;
 using stream_t = boost::beast::websocket::stream<ssl::stream<boost::asio::ip::tcp::socket>>;
 using stream_tp = std::shared_ptr<stream_t>;
-  
+
 /*******************************************************************************
  * make_websocket_connector
  ******************************************************************************/
 auto
-make_websocket_connector(const context_tp& context, const logger_t& logger, const ssl_context_tp& ssl_context )
+make_websocket_connector(const context_tp& context, const logger_t& logger, const ssl_context_tp& ssl_context)
 {
   return [=](const tcp::resolver::results_type& resolve_result) {
     using result_t = stream_tp;
@@ -77,7 +77,7 @@ make_ssl_handshaker(const logger_t& logger)
     return rxcpp::observable<>::create<result_t>(std::move(on_subscribe));
   };
 }
-  
+
 /*******************************************************************************
  * create_websocket_client
  ******************************************************************************/
@@ -85,13 +85,13 @@ rxcpp::observable<ServicePacket>
 create_websocket_client_ssl(const std::shared_ptr<ServiceContext>& context,
                             const std::string& host,
                             unsigned short port,
-			    const std::string& target,
+                            const std::string& target,
                             const Logger& logger)
 {
   auto ssl_context = std::make_shared<ssl_context_t>(ssl::context::sslv23_client);
   ssl_context->set_options(boost::asio::ssl::context::default_workarounds);
   load_root_certificates(*ssl_context);
-  
+
   auto address_resolver = make_address_resolver(context, logger, host, std::to_string(port));
   auto websocket_connector = make_websocket_connector(context, logger, ssl_context);
   auto ssl_handshaker = make_ssl_handshaker(logger);

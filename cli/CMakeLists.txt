@@ -13,9 +13,10 @@ target_link_libraries(trawler-cli
     yaml-cpp
     trawler-services-websocket-client
     trawler-services-websocket-server
+    trawler-services-http-server
     trawler-pipelines-endpoint
     trawler-pipelines-inja
-    trawler-pipelines-jq    
+    trawler-pipelines-jq
     trawler-logging
   PUBLIC
     Boost::program_options

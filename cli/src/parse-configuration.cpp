@@ -23,6 +23,22 @@ struct convert<trawler::config::websocket_client_service_t>
 };
 
 /*******************************************************************************
+ * convert http_server_service_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::http_server_service_t>
+{
+  static bool decode(const Node& node, trawler::config::http_server_service_t& svc)
+  {
+    svc.name = node["name"].as<std::string>( );
+    svc.service = node["service"].as<std::string>( );
+    svc.host = node["host"].as<std::string>( );
+    svc.port = node["port"].as<unsigned short>( );
+    return true;
+  }
+};
+
+/*******************************************************************************
  * convert inja_pipeline_t
  *******************************************************************************/
 template<>
@@ -99,6 +115,9 @@ struct convert<trawler::configuration_t>
     for (const auto& svc : node["services"]) {
       if (svc.IsMap( ) && svc["service"].as<std::string>( ) == "websocket-client") {
         config.services.emplace_back(svc.as<trawler::config::websocket_client_service_t>( ));
+      }
+      if (svc.IsMap( ) && svc["service"].as<std::string>( ) == "http-server") {
+        config.services.emplace_back(svc.as<trawler::config::http_server_service_t>( ));
       }
     }
   }

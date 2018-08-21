@@ -22,6 +22,12 @@ struct websocket_client_service_t : public service_t
   bool ssl = false;
 };
 
+struct http_server_service_t : public service_t
+{
+  std::string host = "";
+  unsigned short port = 0;
+};
+
 struct pipeline_t
 {
   std::string name = "";
@@ -51,7 +57,7 @@ struct endpoint_t
 
 struct configuration_t
 {
-  using service_t = std::variant<config::websocket_client_service_t>;
+  using service_t = std::variant<config::websocket_client_service_t, config::http_server_service_t>;
   using pipeline_t = std::variant<config::inja_pipeline_t, config::jq_pipeline_t>;
   using endpoint_t = config::endpoint_t;
 

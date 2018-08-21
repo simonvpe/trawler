@@ -9,6 +9,11 @@ services:
     target: /ws/2
     ssl: true
 
+  - name: http-server
+    service: http-server
+    host: "0.0.0.0"
+    port: 8099
+
 pipelines:
   # Filter out messages looking like [x, [y, z, ...]]. Those are the ticker values, the
   # rest is uninteresting. Then store each value under keys in a json object.
@@ -76,4 +81,8 @@ endpoints:
   - name: terminate
     source: inja-pipeline
     event: data
-  
+
+  - name: temp
+    source: http-server
+    event: data
+    data: 'hello world'

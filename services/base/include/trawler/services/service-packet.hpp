@@ -35,6 +35,8 @@ public:
   template<typename T>
   T get_payload_as( ) const;
 
+  const payload_t& get_payload( ) const { return payload; }
+
   EStatus get_status( ) const { return status; }
 
   explicit ServicePacket(EStatus status)

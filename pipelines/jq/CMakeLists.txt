@@ -4,6 +4,8 @@ add_library(trawler-pipelines-jq
 )
 
 target_link_libraries(trawler-pipelines-jq
+  PRIVATE
+    nlohmann_json
   PUBLIC
     jq
     trawler-services-base

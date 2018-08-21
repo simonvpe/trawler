@@ -1,5 +1,7 @@
 #include "overloaded.hpp"
 #include <trawler/cli/spawn-pipelines.hpp>
+#include <trawler/pipelines/buffer/buffer.hpp>
+#include <trawler/pipelines/emit/emit.hpp>
 #include <trawler/pipelines/endpoint/endpoint.hpp>
 #include <trawler/pipelines/inja/inja.hpp>
 #include <trawler/pipelines/jq/jq.hpp>
@@ -49,6 +51,29 @@ make_jq_visitor(const services_t& services, pipelines_t& pipelines, const Logger
   };
 }
 
+auto
+make_buffer_visitor(const services_t& services, pipelines_t& pipelines, const Logger& logger)
+{
+  return [&](const config::buffer_pipeline_t& pipe) {
+    logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
+    auto source = find_source(services, pipelines, pipe.source);
+    auto trigger = find_source(services, pipelines, pipe.trigger_source);
+    auto observer = create_buffer_pipeline(std::move(trigger), std::move(source), logger);
+    pipelines.push_back({ pipe.name, std::move(observer) });
+  };
+}
+
+auto
+make_emit_visitor(const services_t& services, pipelines_t& pipelines, const Logger& logger)
+{
+  return [&](const config::emit_pipeline_t& pipe) {
+    logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
+    auto source = find_source(services, pipelines, pipe.source);
+    auto observer = source.map(create_emit_pipeline(pipe.data, { pipe.name })).as_dynamic( );
+    pipelines.push_back({ pipe.name, std::move(observer) });
+  };
+}
+
 pipelines_t
 spawn_pipelines(const services_t& services,
                 const std::vector<configuration_t::pipeline_t>& pipeline_config,
@@ -59,8 +84,13 @@ spawn_pipelines(const services_t& services,
 
   auto inja_visitor = make_inja_visitor(services, pipelines, logger);
   auto jq_visitor = make_jq_visitor(services, pipelines, logger);
+  auto buffer_visitor = make_buffer_visitor(services, pipelines, logger);
+  auto emit_visitor = make_emit_visitor(services, pipelines, logger);
 
-  auto visitor = overloaded{ std::move(inja_visitor), std::move(jq_visitor) };
+  auto visitor = overloaded{
+    std::move(inja_visitor), std::move(jq_visitor), std::move(buffer_visitor), std::move(emit_visitor)
+  };
+
   for (const configuration_t::pipeline_t& pipe : pipeline_config) {
     std::visit(visitor, pipe);
   }

@@ -15,6 +15,13 @@ services:
     port: 8099
 
 pipelines:
+  - name: reply-message
+    pipeline: emit
+    source: bitcoin-client
+    event: connected
+    data: |
+      { "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }
+
   # Filter out messages looking like [x, [y, z, ...]]. Those are the ticker values, the
   # rest is uninteresting. Then store each value under keys in a json object.
   - name: jq-pipeline
@@ -35,10 +42,17 @@ pipelines:
         low:               .[9]
       }
 
+  - name: value-buffer
+    pipeline: buffer
+    source: jq-pipeline
+    event: data
+    trigger_source: http-server
+    trigger_event: data
+
   # Render the bitcoin data into a nice webpage using the inja template engine.
   - name: inja-pipeline
     pipeline: inja
-    source: jq-pipeline
+    source: value-buffer
     event: data
     template: |
       <table>
@@ -55,34 +69,15 @@ pipelines:
           <th>Low</th>
         </tr>
         <tr>
-          <th>{{ payload/bid               }}</th>
-          <th>{{ payload/bid_size          }}</th>
-          <th>{{ payload/ask               }}</th>
-          <th>{{ payload/ask_size          }}</th>
-          <th>{{ payload/daily_change      }}</th>
-          <th>{{ payload/daily_change_perc }}</th>
-          <th>{{ payload/last_price        }}</th>
-          <th>{{ payload/volume            }}</th>
-          <th>{{ payload/high              }}</th>
-          <th>{{ payload/low               }}</th>
+          <th>{{ payload/source/bid               }}</th>
         </tr>
       </table>
 
-#  - name: value-buffer
-#    pipeline: buffer
-#    source:         
-  
 endpoints:
   - name: subscribe
-    source: bitcoin-client
+    source: reply-message
     event: connected
-    data: '{ "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }'
 
   - name: terminate
     source: inja-pipeline
     event: data
-
-  - name: temp
-    source: http-server
-    event: data
-    data: 'hello world'

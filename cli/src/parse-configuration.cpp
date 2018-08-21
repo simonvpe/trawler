@@ -73,6 +73,41 @@ struct convert<trawler::config::jq_pipeline_t>
 };
 
 /*******************************************************************************
+ * convert buffer_pipeline_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::buffer_pipeline_t>
+{
+  static bool decode(const Node& node, trawler::config::buffer_pipeline_t& pipe)
+  {
+    pipe.name = node["name"].as<std::string>( );
+    pipe.pipeline = node["pipeline"].as<std::string>( );
+    pipe.source = node["source"].as<std::string>( );
+    pipe.event = node["event"].as<std::string>( );
+    pipe.trigger_source = node["trigger_source"].as<std::string>( );
+    pipe.trigger_event = node["trigger_event"].as<std::string>( );
+    return true;
+  }
+};
+
+/*******************************************************************************
+ * convert emit_pipeline_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::emit_pipeline_t>
+{
+  static bool decode(const Node& node, trawler::config::emit_pipeline_t& pipe)
+  {
+    pipe.name = node["name"].as<std::string>( );
+    pipe.pipeline = node["pipeline"].as<std::string>( );
+    pipe.source = node["source"].as<std::string>( );
+    pipe.event = node["event"].as<std::string>( );
+    pipe.data = node["data"].as<std::string>( );
+    return true;
+  }
+};
+
+/*******************************************************************************
  * convert endpoint_t
  *******************************************************************************/
 template<>
@@ -127,9 +162,12 @@ struct convert<trawler::configuration_t>
     for (const auto& pipe : node["pipelines"]) {
       if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "inja") {
         config.pipelines.emplace_back(pipe.as<trawler::config::inja_pipeline_t>( ));
-      }
-      if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "jq") {
+      } else if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "jq") {
         config.pipelines.emplace_back(pipe.as<trawler::config::jq_pipeline_t>( ));
+      } else if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "buffer") {
+        config.pipelines.emplace_back(pipe.as<trawler::config::buffer_pipeline_t>( ));
+      } else if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "emit") {
+        config.pipelines.emplace_back(pipe.as<trawler::config::emit_pipeline_t>( ));
       }
     }
   }

@@ -17,6 +17,8 @@ target_link_libraries(trawler-cli
     trawler-pipelines-endpoint
     trawler-pipelines-inja
     trawler-pipelines-jq
+    trawler-pipelines-buffer
+    trawler-pipelines-emit
     trawler-logging
   PUBLIC
     Boost::program_options

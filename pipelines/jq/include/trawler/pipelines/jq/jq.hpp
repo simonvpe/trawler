@@ -1,6 +1,7 @@
 #pragma once
 #include <functional>
 #include <memory>
+#include <nlohmann/json.hpp>
 #include <rxcpp/rx.hpp>
 #include <string>
 #include <trawler/logging/logger.hpp>
@@ -74,7 +75,9 @@ create_jq_pipeline(const std::string& script, const Logger& logger = { "jq" })
           auto result_string = std::string{ jv_string_value(dump) };
 
           if (result_string != "null") {
-            subscriber.on_next(input.with_payload(result_string));
+            logger.debug("Emitting " + result_string);
+            auto json = nlohmann::json::parse(result_string);
+            subscriber.on_next(input.with_payload({ json }));
           }
         }
       }

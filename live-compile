@@ -17,12 +17,14 @@ mkdir -p build
 while true; do
     (cd build \
          && cmake .. \
-		  --graphviz=trawler.dot \
-		  -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
-		  -DCMAKE_BUILD_TYPE=Debug \
-		  -DTRAWLER_ENABLE_SANITIZERS=ON \
-	 && make -j`nproc` \
-	 && ./cli/trawler --loglevel debug ../examples/bitcoin.yaml)
+		              --graphviz=trawler.dot \
+		              -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+		              -DCMAKE_BUILD_TYPE=Debug \
+		              -DTRAWLER_ENABLE_SANITIZERS=OFF \
+	       && make -j`nproc` \
+         && ./cli/trawler --loglevel debug ../examples/bitcoin.yaml)
+#         && ./test/pipelines/buffer/trawler-pipelines-buffer-test)
+	 
     inotifywait -e modify `files`
 done
 

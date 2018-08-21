@@ -5,6 +5,7 @@ target_link_libraries(trawler-services-base
     rxcpp
     Threads::Threads
     Boost::system
+    nlohmann_json
 )
 
 target_include_directories(trawler-services-base

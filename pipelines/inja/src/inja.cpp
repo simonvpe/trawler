@@ -11,9 +11,9 @@ std::function<ServicePacket(ServicePacket)>
 create_inja_pipeline(const std::string& tmplate, const Logger& logger)
 {
   return [=](const auto& x) {
-    const auto out = [tmplate, in = x.get_payload( )] {
+    const auto out = [tmplate, in = x.template get_payload_as<json>( )] {
       if (in.size( ) > 0) {
-        return inja::render(tmplate, json{ { "payload", json::parse(in) } });
+        return inja::render(tmplate, json{ { "payload", in } });
       }
       return std::string{};
     }( );

@@ -93,7 +93,7 @@ make_http_event_loop(const std::shared_ptr<ServiceContext>& context, const Logge
 
       auto on_next = [=](status_t status, data_t data = "") {
         auto fn = boost::asio::bind_executor(*service_strand, [=] {
-          subscriber.on_next(ServicePacket{ status, data, on_write });
+          subscriber.on_next(ServicePacket{ status, { data }, on_write });
         });
         fn( );
       };
@@ -147,7 +147,7 @@ SCENARIO("dummy http-server")
     .filter([](const auto& s) { return s.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; })
     .as_blocking( )
     .subscribe([](auto s) {
-      std::cout << "PAYLOAD: " << s.get_payload( ) << "\n";
+      std::cout << "PAYLOAD: " << s.template get_payload_as<std::string>( ) << "\n";
       s.reply("hello world");
     });
 }

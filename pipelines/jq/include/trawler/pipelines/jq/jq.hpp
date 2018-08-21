@@ -52,7 +52,8 @@ create_jq_pipeline(const std::string& script, const Logger& logger = { "jq" })
   return [=](const ServicePacket& input) {
     return rxcpp::observable<>::create<ServicePacket>([=](auto subscriber) {
       auto parser = make_jv_parser(0);
-      jv_parser_set_buf(parser.get( ), input.get_payload( ).c_str( ), input.get_payload( ).size( ), 0);
+      const auto payload = input.get_payload_as<std::string>( );
+      jv_parser_set_buf(parser.get( ), payload.c_str( ), payload.size( ), 0);
 
       while (true) {
         auto value = jv_parser_next(parser.get( ));

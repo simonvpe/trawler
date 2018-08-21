@@ -47,8 +47,9 @@ SCENARIO("Websocket server and client")
   cli1.merge(cli2)
     .reduce(std::vector<std::string>{},
             [](auto acc, auto s) {
-              CHECK(s.get_payload( ) == "PONG");
-              acc.push_back(s.get_payload( ));
+              const auto payload = s.template get_payload_as<std::string>( );
+              CHECK(payload == "PONG");
+              acc.push_back(payload);
               return acc;
             })
     .as_blocking( )
@@ -66,5 +67,5 @@ SCENARIO("Websocket ssl client")
     .filter(filter_data)
     .take(1)
     .as_blocking( )
-    .subscribe([](auto p) { CHECK( p.get_payload( ) == R"/({"op":"pong"})/" ); });
+    .subscribe([](auto p) { CHECK(p.template get_payload_as<std::string>( ) == R"/({"op":"pong"})/"); });
 }

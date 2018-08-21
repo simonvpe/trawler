@@ -87,7 +87,7 @@ make_websocket_event_loop(const std::shared_ptr<ServiceContext>& context, const 
 
       auto on_next = [=](status_t status, data_t data = "") {
         auto fn = asio::bind_executor(*service_strand, [=] {
-          subscriber.on_next(ServicePacket{ status, data, on_write });
+          subscriber.on_next(ServicePacket{ status, { data }, on_write });
         });
         fn( );
       };

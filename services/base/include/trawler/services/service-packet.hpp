@@ -1,5 +1,7 @@
 #pragma once
 #include <functional>
+#include <nlohmann/json.hpp>
+#include <variant>
 
 namespace trawler {
 
@@ -12,8 +14,8 @@ public:
     DISCONNECTED,
     DATA_TRANSMISSION
   };
-  using payload_t = std::string;
-  using on_reply_t = std::function<void(payload_t)>;
+  using payload_t = std::variant<std::monostate, std::string, nlohmann::json>;
+  using on_reply_t = std::function<void(std::string)>;
 
 private:
   EStatus status;
@@ -21,7 +23,7 @@ private:
   on_reply_t on_reply;
 
 public:
-  bool reply(payload_t reply_payload) const
+  bool reply(std::string reply_payload) const
   {
     if (on_reply) {
       on_reply(std::move(reply_payload));
@@ -30,7 +32,8 @@ public:
     return false;
   }
 
-  const payload_t& get_payload( ) const { return payload; }
+  template<typename T>
+  T get_payload_as( ) const;
 
   EStatus get_status( ) const { return status; }
 
@@ -54,4 +57,30 @@ public:
     return ServicePacket{ this->status, std::move(payload), this->on_reply };
   }
 };
+
+template<>
+inline std::string
+ServicePacket::get_payload_as<std::string>( ) const
+{
+  if (std::holds_alternative<std::string>(payload)) {
+    return std::get<std::string>(payload);
+  }
+  if (std::holds_alternative<nlohmann::json>(payload)) {
+    return std::get<nlohmann::json>(payload).dump( );
+  }
+  return "";
+}
+
+template<>
+inline nlohmann::json
+ServicePacket::get_payload_as<nlohmann::json>( ) const
+{
+  if (std::holds_alternative<std::string>(payload)) {
+    return nlohmann::json::parse(std::get<std::string>(payload));
+  }
+  if (std::holds_alternative<nlohmann::json>(payload)) {
+    return std::get<nlohmann::json>(payload);
+  }
+  return nlohmann::json{};
+}
 }

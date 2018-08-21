@@ -65,8 +65,6 @@ make_http_event_loop(const std::shared_ptr<ServiceContext>& context, const Logge
   return [=](const socket_tp& socket) {
     using result_t = ServicePacket;
 
-    auto buffer = std::make_shared<boost::beast::flat_buffer>( );
-    auto request = std::make_shared<http::request<http::string_body>>( );
     auto session_strand = std::make_shared<strand_t>(context->get_session_context( ).get_executor( ));
     auto service_strand = std::make_shared<strand_t>(context->get_service_context( ).get_executor( ));
 
@@ -74,7 +72,31 @@ make_http_event_loop(const std::shared_ptr<ServiceContext>& context, const Logge
       using status_t = ServicePacket::EStatus;
       using data_t = const std::string&;
 
-      auto on_next = [](status_t status, data_t data = "") {};
+      auto buffer = std::make_shared<boost::beast::flat_buffer>( );
+      auto request = std::make_shared<http::request<http::string_body>>( );
+
+      auto on_write = [=](data_t data) {
+        auto response = http::response<http::string_body>{ http::status::ok, request->version( ) };
+        response.set(http::field::server, "1.0");
+        response.set(http::field::content_type, "text/html");
+        response.keep_alive(request->keep_alive( ));
+        response.body( ) = data;
+        response.prepare_payload( );
+        using message_type = http::message<false, decltype(response)::body_type, decltype(response)::fields_type>;
+        auto message = std::make_shared<message_type>(std::move(response));
+        auto fn = [=] {
+          auto cb = [message, socket, session_strand](error_t, std::size_t) {};
+          http::async_write(*socket, *message, boost::asio::bind_executor(*session_strand, cb));
+        };
+        boost::asio::bind_executor(*service_strand, fn)( );
+      };
+
+      auto on_next = [=](status_t status, data_t data = "") {
+        auto fn = boost::asio::bind_executor(*service_strand, [=] {
+          subscriber.on_next(ServicePacket{ status, data, on_write });
+        });
+        fn( );
+      };
 
       auto on_error = [=](std::exception_ptr e) {
         auto fn = boost::asio::bind_executor(*service_strand, [=] { subscriber.on_error(e); });
@@ -121,7 +143,11 @@ SCENARIO("dummy http-server")
   using namespace trawler;
   Logger::set_log_level(Logger::ELogLevel::DEBUG);
   auto context = make_service_context( );
-  create_http_server(context, "0.0.0.0", 5001, { "my-http-server" }).as_blocking( ).subscribe([](auto s) {
-    std::cout << "PAYLOAD: " << s.get_payload( ) << "\n";
-  });
+  create_http_server(context, "0.0.0.0", 5001, { "my-http-server" })
+    .filter([](const auto& s) { return s.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; })
+    .as_blocking( )
+    .subscribe([](auto s) {
+      std::cout << "PAYLOAD: " << s.get_payload( ) << "\n";
+      s.reply("hello world");
+    });
 }

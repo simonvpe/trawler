@@ -5,8 +5,8 @@ add_library(trawler-pipelines-inja
 
 target_link_libraries(trawler-pipelines-inja
   PRIVATE
+    nlohmann_json # For some reason inja segfaults without this line here
     inja
-    nlohmann_json
   PUBLIC
     trawler-services-base
     trawler-logging

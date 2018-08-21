@@ -69,7 +69,16 @@ pipelines:
           <th>Low</th>
         </tr>
         <tr>
-          <th>{{ payload/source/bid               }}</th>
+          <th>{{ source/bid               }}</th>
+          <th>{{ source/bid_size          }}</th>
+          <th>{{ source/ask               }}</th>
+          <th>{{ source/ask_size          }}</th>
+          <th>{{ source/daily_change      }}</th>
+          <th>{{ source/daily_change_perc }}</th>
+          <th>{{ source/last_price        }}</th>
+          <th>{{ source/volume            }}</th>
+          <th>{{ source/high              }}</th>
+          <th>{{ source/low               }}</th>
         </tr>
       </table>
 

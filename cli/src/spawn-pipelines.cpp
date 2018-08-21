@@ -58,7 +58,7 @@ make_buffer_visitor(const services_t& services, pipelines_t& pipelines, const Lo
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     auto source = find_source(services, pipelines, pipe.source);
     auto trigger = find_source(services, pipelines, pipe.trigger_source);
-    auto observer = create_buffer_pipeline(std::move(trigger), std::move(source), logger);
+    auto observer = create_buffer_pipeline(std::move(trigger), std::move(source), logger).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }

@@ -39,6 +39,45 @@ struct convert<trawler::config::http_server_service_t>
 };
 
 /*******************************************************************************
+ * get_events
+ *******************************************************************************/
+std::optional<std::vector<trawler::ServicePacket::EStatus>>
+get_events(const Node& node, const std::string& property_name)
+{
+  auto parse_event = [](const std::string& event_str) {
+    if (event_str == "data") {
+      return trawler::ServicePacket::EStatus::DATA_TRANSMISSION;
+    }
+    if (event_str == "connected") {
+      return trawler::ServicePacket::EStatus::CONNECTED;
+    }
+    if (event_str == "disconnected") {
+      return trawler::ServicePacket::EStatus::DISCONNECTED;
+    }
+    throw std::runtime_error("Unknow event " + event_str);
+  };
+
+  if (node[property_name]) {
+    std::vector<trawler::ServicePacket::EStatus> result{};
+
+    if (node[property_name].IsSequence( )) {
+      for (const auto& ev : node["event"]) {
+        const auto event_str = ev.as<std::string>( );
+        result.push_back(parse_event(event_str));
+      }
+    } else if (node[property_name].IsScalar( )) {
+      const auto event_str = node[property_name].as<std::string>( );
+      result.push_back(parse_event(event_str));
+    } else {
+      throw std::runtime_error{ "Bad event" };
+    }
+
+    return { std::move(result) };
+  }
+  return std::nullopt;
+}
+
+/*******************************************************************************
  * convert pipeline_t
  *******************************************************************************/
 template<>
@@ -50,16 +89,9 @@ struct convert<trawler::config::pipeline_t>
     pipe.pipeline = node["pipeline"].as<std::string>( );
     pipe.source = node["source"].as<std::string>( );
 
-    if (node["event"] && node["event"].as<std::string>( ) == "data") {
-      pipe.event = trawler::ServicePacket::EStatus::DATA_TRANSMISSION;
-    } else if (node["event"] && node["event"].as<std::string>( ) == "connected") {
-      pipe.event = trawler::ServicePacket::EStatus::CONNECTED;
-    } else if (node["event"] && node["event"].as<std::string>( ) == "disconnected") {
-      pipe.event = trawler::ServicePacket::EStatus::DISCONNECTED;
-    } else if (node["event"]) {
-      throw std::runtime_error{ "Unknown event " + node["event"].as<std::string>( ) };
+    if (auto events = get_events(node, "event")) {
+      pipe.event = std::move(events.value( ));
     }
-
     return true;
   }
 };
@@ -103,14 +135,8 @@ struct convert<trawler::config::buffer_pipeline_t>
     convert<trawler::config::pipeline_t>::decode(node, pipe);
     pipe.trigger_source = node["trigger_source"].as<std::string>( );
 
-    if (node["trigger_event"] && node["trigger_event"].as<std::string>( ) == "data") {
-      pipe.trigger_event = trawler::ServicePacket::EStatus::DATA_TRANSMISSION;
-    } else if (node["trigger_event"] && node["trigger_event"].as<std::string>( ) == "connected") {
-      pipe.trigger_event = trawler::ServicePacket::EStatus::CONNECTED;
-    } else if (node["trigger_event"] && node["trigger_event"].as<std::string>( ) == "disconnected") {
-      pipe.trigger_event = trawler::ServicePacket::EStatus::DISCONNECTED;
-    } else if (node["trigger_event"]) {
-      throw std::runtime_error{ "Unknown event " + node["trigger_event"].as<std::string>( ) };
+    if (auto events = get_events(node, "trigger_event")) {
+      pipe.trigger_event = std::move(events.value( ));
     }
 
     return true;

@@ -34,7 +34,7 @@ struct pipeline_t
   std::string name = "";
   std::string pipeline = "";
   std::string source = "";
-  ServicePacket::EStatus event = ServicePacket::EStatus::DATA_TRANSMISSION;
+  std::vector<ServicePacket::EStatus> event = { ServicePacket::EStatus::DATA_TRANSMISSION };
 };
 
 struct inja_pipeline_t : public pipeline_t
@@ -55,7 +55,7 @@ struct emit_pipeline_t : public pipeline_t
 struct buffer_pipeline_t : public pipeline_t
 {
   std::string trigger_source = "";
-  ServicePacket::EStatus trigger_event = ServicePacket::EStatus::DATA_TRANSMISSION;
+  std::vector<ServicePacket::EStatus> trigger_event = { ServicePacket::EStatus::DATA_TRANSMISSION };
 };
 
 struct endpoint_t

@@ -30,11 +30,19 @@ find_source(const services_t& services, const pipelines_t& pipelines, const std:
 }
 
 auto
+make_event_filter(std::vector<ServicePacket::EStatus> accept)
+{
+  return [accept = std::move(accept)](const ServicePacket& service_packet) {
+    return std::find(cbegin(accept), cend(accept), service_packet.get_status( )) != cend(accept);
+  };
+}
+
+auto
 make_inja_visitor(const services_t& services, pipelines_t& pipelines, const Logger& logger)
 {
   return [&](const config::inja_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
-    auto source = find_source(services, pipelines, pipe.source);
+    auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
     auto observer = source.map(create_inja_pipeline(pipe.tmplate, { pipe.name })).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
@@ -45,7 +53,7 @@ make_jq_visitor(const services_t& services, pipelines_t& pipelines, const Logger
 {
   return [&](const config::jq_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
-    auto source = find_source(services, pipelines, pipe.source);
+    auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
     auto observer = source.flat_map(create_jq_pipeline(pipe.script, { pipe.name })).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
@@ -56,8 +64,8 @@ make_buffer_visitor(const services_t& services, pipelines_t& pipelines, const Lo
 {
   return [&](const config::buffer_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
-    auto source = find_source(services, pipelines, pipe.source);
-    auto trigger = find_source(services, pipelines, pipe.trigger_source);
+    auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
+    auto trigger = find_source(services, pipelines, pipe.trigger_source).filter(make_event_filter(pipe.trigger_event));
     auto observer = create_buffer_pipeline(std::move(trigger), std::move(source), logger).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
@@ -68,7 +76,7 @@ make_emit_visitor(const services_t& services, pipelines_t& pipelines, const Logg
 {
   return [&](const config::emit_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
-    auto source = find_source(services, pipelines, pipe.source);
+    auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
     auto observer = source.map(create_emit_pipeline(pipe.data, { pipe.name })).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };

@@ -18,7 +18,7 @@ pipelines:
   - name: reply-message
     pipeline: emit
     source: bitcoin-client
-    event: connected
+    event: [ "connected" ]
     data: |
       { "event": "subscribe", "channel": "ticker", "pair": "BTCUSD" }
 

@@ -8,5 +8,5 @@ namespace trawler {
 rxcpp::observable<ServicePacket>
 create_buffer_pipeline(rxcpp::observable<ServicePacket> trigger,
                        rxcpp::observable<ServicePacket> source,
-                       const Logger& logger = { "inja" });
+                       const Logger& logger = { "buffer-pipeline" });
 }

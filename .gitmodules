@@ -4,9 +4,6 @@
 [submodule "vendor/RxCpp"]
 	path = vendor/RxCpp
 	url = https://github.com/ReactiveX/RxCpp.git
-[submodule "vendor/rapidjson"]
-	path = vendor/rapidjson
-	url = https://github.com/Tencent/rapidjson.git
 [submodule "vendor/spdlog"]
 	path = vendor/spdlog
 	url = https://github.com/gabime/spdlog.git

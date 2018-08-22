@@ -7,5 +7,5 @@
 namespace trawler {
 
 std::function<void(const ServicePacket&)>
-create_endpoint(const std::optional<std::string>& data, const Logger& logger = { "endpoint" });
+create_endpoint(const Logger& logger = { "endpoint" });
 }

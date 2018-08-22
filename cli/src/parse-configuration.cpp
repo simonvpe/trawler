@@ -158,25 +158,6 @@ struct convert<trawler::config::emit_pipeline_t>
 };
 
 /*******************************************************************************
- * convert endpoint_t
- *******************************************************************************/
-template<>
-struct convert<trawler::config::endpoint_t>
-{
-  static bool decode(const Node& node, trawler::config::endpoint_t& pipe)
-  {
-    pipe.name = node["name"].as<std::string>( );
-    pipe.source = node["source"].as<std::string>( );
-    pipe.event = node["event"].as<std::string>( );
-
-    if (node["data"]) {
-      pipe.data = node["data"].as<std::string>( );
-    }
-    return true;
-  }
-};
-
-/*******************************************************************************
  * convert configuration_t
  *******************************************************************************/
 template<>
@@ -224,11 +205,7 @@ struct convert<trawler::configuration_t>
 
   static void decode_endpoints(const Node& node, trawler::configuration_t& config)
   {
-    for (const auto& endp : node["endpoints"]) {
-      if (endp.IsMap( )) {
-        config.endpoints.emplace_back(endp.as<trawler::config::endpoint_t>( ));
-      }
-    }
+    config.endpoints = std::move(node["endpoints"].as<std::vector<trawler::configuration_t::endpoint_t>>( ));
   }
 };
 }

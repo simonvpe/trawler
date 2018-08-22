@@ -57,14 +57,6 @@ struct buffer_pipeline_t : public pipeline_t
   std::string trigger_source = "";
   std::vector<ServicePacket::EStatus> trigger_event = { ServicePacket::EStatus::DATA_TRANSMISSION };
 };
-
-struct endpoint_t
-{
-  std::string name = "";
-  std::string source = "";
-  std::string event = "";
-  std::optional<std::string> data;
-};
 }
 
 struct configuration_t
@@ -72,7 +64,7 @@ struct configuration_t
   using service_t = std::variant<config::websocket_client_service_t, config::http_server_service_t>;
   using pipeline_t =
     std::variant<config::inja_pipeline_t, config::jq_pipeline_t, config::buffer_pipeline_t, config::emit_pipeline_t>;
-  using endpoint_t = config::endpoint_t;
+  using endpoint_t = std::string;
 
   std::vector<service_t> services = {};
   std::vector<pipeline_t> pipelines = {};

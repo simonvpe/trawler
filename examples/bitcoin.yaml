@@ -79,10 +79,6 @@ pipelines:
       </table>
 
 endpoints:
-  - name: subscribe
-    source: reply-message
-    event: connected
-
-  - name: terminate
-    source: inja-pipeline
-    event: data
+  - reply-message
+  - inja-pipeline
+...

@@ -79,19 +79,13 @@ SCENARIO("configuration")
   {
     const auto configuration = trawler::parse_configuration(R"#(
     endpoints:
-      - name: my-endpoint
-        source: some-source
-        event: some-event
-        data: some-data
+      - my-endpoint
     )#");
     const auto endpoints = configuration.endpoints;
     REQUIRE(endpoints.size( ) == 1);
 
     const auto endpoint = endpoints.front( );
 
-    CHECK(endpoint.name == "my-endpoint");
-    CHECK(endpoint.source == "some-source");
-    CHECK(endpoint.event == "some-event");
-    CHECK(endpoint.data == "some-data");
+    CHECK(endpoint == "my-endpoint");
   }
 }

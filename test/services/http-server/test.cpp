@@ -9,7 +9,6 @@ SCENARIO("dummy http-server")
   auto context = make_service_context( );
   create_http_server(context, "0.0.0.0", 5001, { "my-http-server" })
     .filter([](const auto& s) { return s.get_status( ) == ServicePacket::EStatus::DATA_TRANSMISSION; })
-    .as_blocking( )
     .subscribe([](auto s) {
       std::cout << "PAYLOAD: " << s.template get_payload_as<std::string>( ) << "\n";
       s.reply("hello world");

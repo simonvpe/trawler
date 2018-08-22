@@ -73,7 +73,7 @@ cat <<EOF > "${includedir}/${pipeline_name}.hpp"
 
 namespace trawler {
 std::function<ServicePacket(ServicePacket)>
-create_${pipeline_name}_pipeline(const Logger& logger = { "inja" });
+create_${pipeline_name/-/_}_pipeline(const Logger& logger = { "${pipeline_name}" });
 }
 EOF
 
@@ -83,7 +83,7 @@ cat <<EOF > "${srcdir}/${pipeline_name}.cpp"
 namespace trawler {
 
 std::function<ServicePacket(ServicePacket)>
-create_${pipeline_name}_pipeline(const Logger& logger)
+create_${pipeline_name/-/_}_pipeline(const Logger& logger)
 {
   return [=](const auto& x) { return x; };
 }

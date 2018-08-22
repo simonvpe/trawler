@@ -39,6 +39,22 @@ struct convert<trawler::config::http_server_service_t>
 };
 
 /*******************************************************************************
+ * convert pipeline_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::pipeline_t>
+{
+  static bool decode(const Node& node, trawler::config::pipeline_t& pipe)
+  {
+    pipe.name = node["name"].as<std::string>( );
+    pipe.pipeline = node["pipeline"].as<std::string>( );
+    pipe.source = node["source"].as<std::string>( );
+    pipe.event = node["event"].as<std::string>( );
+    return true;
+  }
+};
+
+/*******************************************************************************
  * convert inja_pipeline_t
  *******************************************************************************/
 template<>
@@ -46,10 +62,7 @@ struct convert<trawler::config::inja_pipeline_t>
 {
   static bool decode(const Node& node, trawler::config::inja_pipeline_t& pipe)
   {
-    pipe.name = node["name"].as<std::string>( );
-    pipe.pipeline = node["pipeline"].as<std::string>( );
-    pipe.source = node["source"].as<std::string>( );
-    pipe.event = node["event"].as<std::string>( );
+    convert<trawler::config::pipeline_t>::decode(node, pipe);
     pipe.tmplate = node["template"].as<std::string>( );
     return true;
   }
@@ -63,10 +76,7 @@ struct convert<trawler::config::jq_pipeline_t>
 {
   static bool decode(const Node& node, trawler::config::jq_pipeline_t& pipe)
   {
-    pipe.name = node["name"].as<std::string>( );
-    pipe.pipeline = node["pipeline"].as<std::string>( );
-    pipe.source = node["source"].as<std::string>( );
-    pipe.event = node["event"].as<std::string>( );
+    convert<trawler::config::pipeline_t>::decode(node, pipe);
     pipe.script = node["script"].as<std::string>( );
     return true;
   }
@@ -80,10 +90,7 @@ struct convert<trawler::config::buffer_pipeline_t>
 {
   static bool decode(const Node& node, trawler::config::buffer_pipeline_t& pipe)
   {
-    pipe.name = node["name"].as<std::string>( );
-    pipe.pipeline = node["pipeline"].as<std::string>( );
-    pipe.source = node["source"].as<std::string>( );
-    pipe.event = node["event"].as<std::string>( );
+    convert<trawler::config::pipeline_t>::decode(node, pipe);
     pipe.trigger_source = node["trigger_source"].as<std::string>( );
     pipe.trigger_event = node["trigger_event"].as<std::string>( );
     return true;
@@ -98,10 +105,7 @@ struct convert<trawler::config::emit_pipeline_t>
 {
   static bool decode(const Node& node, trawler::config::emit_pipeline_t& pipe)
   {
-    pipe.name = node["name"].as<std::string>( );
-    pipe.pipeline = node["pipeline"].as<std::string>( );
-    pipe.source = node["source"].as<std::string>( );
-    pipe.event = node["event"].as<std::string>( );
+    convert<trawler::config::pipeline_t>::decode(node, pipe);
     pipe.data = node["data"].as<std::string>( );
     return true;
   }

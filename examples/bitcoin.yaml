@@ -27,7 +27,6 @@ pipelines:
   - name: jq-pipeline
     pipeline: jq
     source: bitcoin-client
-    event: data
     script: |
       . | arrays | .[1] | arrays | {
         bid:               .[0],
@@ -45,15 +44,12 @@ pipelines:
   - name: value-buffer
     pipeline: buffer
     source: jq-pipeline
-    event: data
     trigger_source: http-server
-    trigger_event: data
 
   # Render the bitcoin data into a nice webpage using the inja template engine.
   - name: inja-pipeline
     pipeline: inja
     source: value-buffer
-    event: data
     template: |
       <table>
         <tr>

@@ -1,6 +1,7 @@
 #pragma once
 #include <optional>
 #include <string>
+#include <trawler/services/service-packet.hpp>
 #include <variant>
 #include <vector>
 
@@ -33,7 +34,7 @@ struct pipeline_t
   std::string name = "";
   std::string pipeline = "";
   std::string source = "";
-  std::string event = "";
+  ServicePacket::EStatus event = ServicePacket::EStatus::DATA_TRANSMISSION;
 };
 
 struct inja_pipeline_t : public pipeline_t
@@ -54,7 +55,7 @@ struct emit_pipeline_t : public pipeline_t
 struct buffer_pipeline_t : public pipeline_t
 {
   std::string trigger_source = "";
-  std::string trigger_event = "";
+  ServicePacket::EStatus trigger_event = ServicePacket::EStatus::DATA_TRANSMISSION;
 };
 
 struct endpoint_t

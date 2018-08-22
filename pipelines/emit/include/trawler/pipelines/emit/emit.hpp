@@ -5,5 +5,5 @@
 
 namespace trawler {
 std::function<ServicePacket(ServicePacket)>
-create_emit_pipeline(const std::string& data, const Logger& logger = { "inja" });
+create_emit_pipeline(const std::string& data, const Logger& logger = { "emit-pipeline" });
 }

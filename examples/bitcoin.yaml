@@ -41,10 +41,16 @@ pipelines:
         low:               .[9]
       }
 
+  - name: request-filter
+    pipeline: jq
+    source: http-server
+    script: |
+      . | select(. | contains({"method": "GET"}))
+
   - name: value-buffer
     pipeline: buffer
     source: jq-pipeline
-    trigger_source: http-server
+    trigger_source: request-filter
 
   # Render the bitcoin data into a nice webpage using the inja template engine.
   - name: inja-pipeline

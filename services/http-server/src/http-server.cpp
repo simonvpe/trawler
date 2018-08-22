@@ -41,9 +41,8 @@ run_http_event_loop(DoRead do_read)
       json_object["headers"][std::string{ header.name_string( ) }] = std::string{ header.value( ) };
     }
 
-    const auto json_string = json_object.dump( );
-    logger.debug(json_string);
-    on_next(status_t::DATA_TRANSMISSION, json_string);
+    logger.debug(json_object.dump( ));
+    on_next(status_t::DATA_TRANSMISSION, json_object);
 
     run_http_event_loop(do_read);
   });
@@ -88,9 +87,9 @@ make_http_event_loop(const std::shared_ptr<ServiceContext>& context, const Logge
         boost::asio::bind_executor(*service_strand, fn)( );
       };
 
-      auto on_next = [=](status_t status, data_t data = "") {
+      auto on_next = [=](status_t status, nlohmann::json data = {}) {
         auto fn = boost::asio::bind_executor(*service_strand, [=] {
-          subscriber.on_next(ServicePacket{ status, { data }, on_write });
+          subscriber.on_next(ServicePacket{ status, { std::move(data) }, on_write });
         });
         fn( );
       };

@@ -158,6 +158,18 @@ struct convert<trawler::config::emit_pipeline_t>
 };
 
 /*******************************************************************************
+ * convert http_client_pipeline_t
+ *******************************************************************************/
+template<>
+struct convert<trawler::config::http_client_pipeline_t>
+{
+  static bool decode(const Node& node, trawler::config::http_client_pipeline_t& pipe)
+  {
+    return convert<trawler::config::pipeline_t>::decode(node, pipe);
+  }
+};
+
+/*******************************************************************************
  * convert configuration_t
  *******************************************************************************/
 template<>
@@ -199,6 +211,8 @@ struct convert<trawler::configuration_t>
         config.pipelines.emplace_back(pipe.as<trawler::config::buffer_pipeline_t>( ));
       } else if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "emit") {
         config.pipelines.emplace_back(pipe.as<trawler::config::emit_pipeline_t>( ));
+      } else if (pipe.IsMap( ) && pipe["pipeline"].as<std::string>( ) == "http-client") {
+        config.pipelines.emplace_back(pipe.as<trawler::config::http_client_pipeline_t>( ));
       }
     }
   }

@@ -1,0 +1,20 @@
+---
+title: Http Proxy Example
+
+services:
+  - name: http-server
+    service: http-server
+    host: "0.0.0.0"
+    port: 8098
+
+pipelines:
+  - name: create-request
+    pipeline: emit
+    source: http-server
+    data: '{"host": "jsonplaceholder.typicode.com", "port": "80", "target": "/todos/1", "version": "1.0"}'
+  - name: http-client
+    pipeline: http-client
+    source: create-request
+
+endpoints:
+  - http-client

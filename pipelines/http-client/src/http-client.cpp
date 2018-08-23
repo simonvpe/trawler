@@ -15,15 +15,25 @@ namespace trawler {
 using tcp = boost::asio::ip::tcp;    // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http; // from <boost/beast/http.hpp>
 
+std::string
+get_string(const nlohmann::json& node, const std::string& field)
+{
+  if (node.find(field) == cend(node) || node[field].type( ) != nlohmann::json::value_t::string) {
+    throw std::runtime_error{ "key \"" + field + "\" required" };
+  }
+  return node[field].get<std::string>( );
+}
+
 std::function<ServicePacket(ServicePacket)>
 create_http_client_pipeline(const Logger& logger)
 {
   return [=](const ServicePacket& service_packet) {
     const auto payload = service_packet.get_payload_as<nlohmann::json>( );
-    const auto host = payload["host"].get<std::string>( );
-    const auto port = payload["port"].get<std::string>( );
-    const auto target = payload["target"].get<std::string>( );
-    const auto version = payload["version"].get<std::string>( ) == "1.0" ? 10 : 11;
+
+    const auto host = get_string(payload, "host");
+    const auto port = get_string(payload, "port");
+    const auto target = get_string(payload, "target");
+    const auto version = get_string(payload, "version") == "1.0" ? 10 : 11;
 
     // The io_context is required for all I/O
     boost::asio::io_context ioc;

@@ -72,7 +72,7 @@ create_jq_pipeline(const std::string& script, const Logger& logger)
           if (result_string != "null") {
             logger.debug("Emitting " + result_string);
             auto json = nlohmann::json::parse(result_string);
-            subscriber.on_next(input.with_payload({ json }));
+            subscriber.on_next(input.with_payload({ std::move(json) }));
           }
         }
       }

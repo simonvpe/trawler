@@ -1,10 +1,13 @@
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
 #include <boost/beast/core.hpp>
+#include <boost/beast/core/buffers_to_string.hpp>
 #include <boost/beast/http.hpp>
 #include <boost/beast/version.hpp>
 #include <cstdlib>
 #include <iostream>
+#include <nlohmann/json.hpp>
 #include <trawler/pipelines/http-client/http-client.hpp>
 
 namespace trawler {
@@ -53,8 +56,15 @@ create_http_client_pipeline(const Logger& logger)
     http::read(socket, buffer, res);
 
     // Store the result
-    std::ostringstream oss;
-    oss << res;
+    nlohmann::json json;
+    for (const auto& header : res.base( )) {
+      json["headers"][std::string{ header.name_string( ) }] = std::string{ header.value( ) };
+    }
+    if (boost::starts_with(res[http::field::content_type], "application/json")) {
+      json["body"] = nlohmann::json::parse(boost::beast::buffers_to_string(res.body( ).data( )));
+    } else {
+      json["body"] = boost::beast::buffers_to_string(res.body( ).data( ));
+    }
 
     // Gracefully close the socket
     boost::system::error_code ec;
@@ -67,7 +77,7 @@ create_http_client_pipeline(const Logger& logger)
       throw boost::system::system_error{ ec };
 
     // If we get here then the connection is closed gracefully
-    return service_packet.with_payload(std::move(oss.str( )));
+    return service_packet.with_payload(std::move(json));
   };
 }
 }

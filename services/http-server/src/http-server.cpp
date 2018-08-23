@@ -1,3 +1,4 @@
+#include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/bind_executor.hpp>
 #include <boost/asio/strand.hpp>
 #include <boost/beast/core.hpp>
@@ -33,12 +34,16 @@ run_http_event_loop(DoRead do_read)
       return;
     }
 
-    auto json_object = json{ { "method", request->method_string( ) },
-                             { "target", request->target( ) },
-                             { "body", request->body( ) } };
+    auto json_object = json{ { "method", request->method_string( ) }, { "target", request->target( ) } };
 
     for (const auto& header : request->base( )) {
       json_object["headers"][std::string{ header.name_string( ) }] = std::string{ header.value( ) };
+    }
+
+    if (boost::starts_with(request->base( )[http::field::content_type], "application/json")) {
+      json_object["body"] = nlohmann::json::parse(std::move(request->body( )));
+    } else {
+      json_object["body"] = request->body( );
     }
 
     logger.debug(json_object.dump( ));

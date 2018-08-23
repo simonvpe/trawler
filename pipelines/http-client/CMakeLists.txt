@@ -1,11 +1,13 @@
 add_library(trawler-pipelines-http-client
   STATIC
     src/http-client.cpp
+    src/http-client-ssl.cpp
 )
 
 target_link_libraries(trawler-pipelines-http-client
   PUBLIC
     trawler-services-base
+    trawler-services-tcp-common
     trawler-logging
     rxcpp
 )

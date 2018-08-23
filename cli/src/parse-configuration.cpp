@@ -165,6 +165,9 @@ struct convert<trawler::config::http_client_pipeline_t>
 {
   static bool decode(const Node& node, trawler::config::http_client_pipeline_t& pipe)
   {
+    if (node["ssl"]) {
+      pipe.ssl = node["ssl"].as<bool>( );
+    }
     return convert<trawler::config::pipeline_t>::decode(node, pipe);
   }
 };

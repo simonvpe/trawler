@@ -59,7 +59,9 @@ struct buffer_pipeline_t : public pipeline_t
 };
 
 struct http_client_pipeline_t : public pipeline_t
-{};
+{
+  bool ssl = false;
+};
 }
 
 struct configuration_t

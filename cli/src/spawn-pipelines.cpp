@@ -89,7 +89,9 @@ make_http_client_visitor(const services_t& services, pipelines_t& pipelines, con
   return [&](const config::http_client_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
-    auto observer = source.map(create_http_client_pipeline({ pipe.name })).as_dynamic( );
+    auto pipeline = pipe.ssl ? create_http_client_ssl_pipeline({ pipe.name })
+                             : create_http_client_pipeline({ pipe.name });
+    auto observer = source.map(std::move(pipeline)).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }

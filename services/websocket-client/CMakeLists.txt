@@ -11,6 +11,7 @@ target_link_libraries(trawler-services-websocket-client
     OpenSSL::SSL
   PRIVATE
     trawler-services-websocket-common
+    trawler-services-tcp-common
 )
 
 target_include_directories(trawler-services-websocket-client

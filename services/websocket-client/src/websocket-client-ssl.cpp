@@ -1,4 +1,3 @@
-#include "load-root-certificates.hpp"
 #include "make-address-resolver.hpp"
 #include "make-websocket-handshaker.hpp"
 #include <boost/asio/connect.hpp>
@@ -8,6 +7,7 @@
 #include <trawler/services/make-runtime-error.hpp>
 #include <trawler/services/service-context.hpp>
 #include <trawler/services/service-packet.hpp>
+#include <trawler/services/tcp-common/load-root-certificates.hpp>
 #include <trawler/services/websocket-client/websocket-client.hpp>
 #include <trawler/services/websocket-common/make-websocket-event-loop.hpp>
 

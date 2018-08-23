@@ -1,3 +1,4 @@
+#include "get-string.hpp"
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/asio/connect.hpp>
 #include <boost/asio/ip/tcp.hpp>
@@ -14,15 +15,6 @@ namespace trawler {
 
 using tcp = boost::asio::ip::tcp;    // from <boost/asio/ip/tcp.hpp>
 namespace http = boost::beast::http; // from <boost/beast/http.hpp>
-
-std::string
-get_string(const nlohmann::json& node, const std::string& field)
-{
-  if (node.find(field) == cend(node) || node[field].type( ) != nlohmann::json::value_t::string) {
-    throw std::runtime_error{ "key \"" + field + "\" required" };
-  }
-  return node[field].get<std::string>( );
-}
 
 std::function<ServicePacket(ServicePacket)>
 create_http_client_pipeline(const Logger& logger)

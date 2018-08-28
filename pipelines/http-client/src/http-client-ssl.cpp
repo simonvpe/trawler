@@ -61,6 +61,13 @@ create_http_client_ssl_pipeline(const Logger& logger)
     req.set(http::field::host, host);
     req.set(http::field::user_agent, BOOST_BEAST_VERSION_STRING);
 
+    if (payload.find("headers") != cend(payload) && payload["headers"].type( ) == nlohmann::json::value_t::object) {
+      for (const auto& [key, value] : payload["headers"].get<nlohmann::json::object_t>( )) {
+        logger.debug("Adding header " + key + ": " + value.get<nlohmann::json::string_t>( ));
+        req.set(key, value.get<nlohmann::json::string_t>( ));
+      }
+    }
+
     // Send the HTTP request to the remote host
     http::write(stream, req);
 

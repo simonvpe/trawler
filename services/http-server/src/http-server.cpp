@@ -94,7 +94,7 @@ make_http_event_loop(const std::shared_ptr<ServiceContext>& context, const Logge
 
       auto on_next = [=](status_t status, nlohmann::json data = {}) {
         auto fn = boost::asio::bind_executor(*service_strand, [=] {
-          subscriber.on_next(ServicePacket{ status, { std::move(data) }, on_write });
+          subscriber.on_next(ServicePacket{ status, ServicePacket::payload_t{ std::move(data) }, on_write });
         });
         fn( );
       };

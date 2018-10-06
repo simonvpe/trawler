@@ -56,7 +56,7 @@ make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
         return;
       }
 
-      logger.info("Listening for connections");
+      logger.info("Listening for connections on " + host + ":" + std::to_string(port));
       subscriber.on_next(acceptor);
       subscriber.on_completed( );
     };

@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.11)
 project(trawler)
 
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
+
 option(TRAWLER_ENABLE_SANITIZERS "Enable sanitizers" OFF)
 
 function(trawler_add_sanitizers TARGET)

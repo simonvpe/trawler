@@ -1,26 +1,56 @@
 dist: trusty
 sudo: require
 
-#addons:
-#  apt:
-#    sources:
-#      - ubuntu-toolchain-r-test
-#    packages:
-#      - gcc-8
-#      - g++-8
-#      - curl
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - jq
+      - openssl
+      - gcc-8
+      - g++-8
+      - python3-pip
+      - autoconf
+      - libtool
+      - git
+      - flex
 
 language: cpp
 compiler: gcc
 
 before_script:
-  - curl -s https://cmake.org/files/v3.12/cmake-3.12.1-Linux-x86_64.sh | sudo bash /dev/stdin --skip-license --prefix=/usr/local
-  - update-alternatives --install /usr/bin/cmake cmake /usr/local/bin/cmake 1 --force
-#  - sudo ln -s /usr/bin/gcc-8 /usr/local/bin/gcc
-#  - sudo ln -s /usr/bin/g++-8 /usr/local/bin/g++
-  - gcc -v && g++ -v && which cmake && cmake --version && /usr/local/bin/cmake --version
+    # Install conan
+  - sudo pip3 install --upgrade pip virtualenv
+  - python3 -m virtualenv .
+  - source bin/activate
+  - pip install conan
+
+  # Compile jq
+   - git clone https://github.com/stedolan/jq.git
+   - cd jq
+   - git submodule init
+   - git submodule update
+   - (pushd modules/oniguruma && autoreconf -i && ./configure && make -j`nproc`)
+   - aclocal
+   - autoconf -i
+   - ./configure
+   - make -j`nproc`
+   - make install
+   
+
+  # Install a recent cmakeheaders
+  - curl -o /tmp/cmake-installer https://cmake.org/files/v3.12/cmake-3.12.1-Linux-x86_64.sh
+  - sudo bash /tmp/cmake-installer --skip-license --prefix=/tmp
+  
+  # Make the downloaded compiler default
+  - sudo ln -s /usr/bin/gcc-8 /usr/local/bin/gcc
+  - sudo ln -s /usr/bin/g++-8 /usr/local/bin/g++
+
+  # Prepare build
   - mkdir build
   - cd build
-  - cmake ..
+  - conan install ..
+  - /tmp/bin/cmake ..
 
-script: make && make test
+script: make -j`nproc` && make test

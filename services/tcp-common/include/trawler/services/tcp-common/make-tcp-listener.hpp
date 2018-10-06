@@ -12,6 +12,7 @@ namespace trawler {
 /*******************************************************************************
  * make_tcp_listener
  ******************************************************************************/
+inline
 auto
 make_tcp_listener(const std::shared_ptr<ServiceContext>& context,
                   const Logger& logger,

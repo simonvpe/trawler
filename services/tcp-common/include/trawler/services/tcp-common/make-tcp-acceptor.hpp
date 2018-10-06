@@ -38,6 +38,7 @@ run_acceptor_loop(DoAccept do_accept)
 /*******************************************************************************
  * make_tcp_acceptor
  ******************************************************************************/
+inline
 auto
 make_tcp_acceptor(const std::shared_ptr<ServiceContext>& context, const Logger& logger)
 {

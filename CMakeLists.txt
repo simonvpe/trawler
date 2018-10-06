@@ -3,7 +3,7 @@ project(trawler)
 
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
-
+add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0)
 option(TRAWLER_ENABLE_SANITIZERS "Enable sanitizers" OFF)
 
 function(trawler_add_sanitizers TARGET)

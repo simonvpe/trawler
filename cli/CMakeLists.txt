@@ -22,7 +22,7 @@ target_link_libraries(trawler-cli
     trawler-pipelines-http-client
     trawler-logging
   PUBLIC
-    Boost::program_options
+    boost_program_options
     trawler-services-base
 )
 

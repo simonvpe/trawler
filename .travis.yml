@@ -1,56 +1,36 @@
 dist: trusty
 sudo: require
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - jq
-      - openssl
-      - gcc-8
-      - g++-8
-      - python3-pip
-      - autoconf
-      - libtool
-      - git
-      - flex
-
 language: cpp
 compiler: gcc
+install: false
+cache: { directories: [ /tmp/cache ] }
+services: [ docker ]
+
+before_install:
+  - | # Start up docker image
+    if [ -f /tmp/cache/container.tar ]; then
+      sudo docker import /tmp/cache/container.tar container
+      CONTAINER=$(sudo docker run -td -v `pwd`:/build -w /build container /bin/bash)
+    else
+      CONTAINER=$(sudo docker run -td -v `pwd`:/build -w /build gcc)
+      sudo docker exec $CONTAINER apt update
+      sudo docker exec $CONTAINER apt install -y python3-pip
+      sudo docker exec $CONTAINER curl -o /tmp/cmake-installer https://cmake.org/files/v3.12/cmake-3.12.1-Linux-x86_64.sh
+      sudo docker exec $CONTAINER bash /tmp/cmake-installer --skip-license --prefix=/tmp
+      sudo docker exec $CONTAINER pip3 install conan
+      sudo docker exec $CONTAINER conan config set compiler.libcxx=libstdc++11
+      sudo docker exec $CONTAINER apt install -y libjq-dev
+      sudo docker exec $CONTAINER rm /var/lib/apt/lists/*
+      sudo docker export -o /tmp/cache/container.tar $CONTAINER
+    fi
 
 before_script:
-    # Install conan
-  - sudo pip3 install --upgrade pip virtualenv
-  - python3 -m virtualenv .
-  - source bin/activate
-  - pip install conan
-
-  # Compile jq
-   - git clone https://github.com/stedolan/jq.git
-   - cd jq
-   - git submodule init
-   - git submodule update
-   - (pushd modules/oniguruma && autoreconf -i && ./configure && make -j`nproc`)
-   - aclocal
-   - autoconf -i
-   - ./configure
-   - make -j`nproc`
-   - make install
-   
-
-  # Install a recent cmakeheaders
-  - curl -o /tmp/cmake-installer https://cmake.org/files/v3.12/cmake-3.12.1-Linux-x86_64.sh
-  - sudo bash /tmp/cmake-installer --skip-license --prefix=/tmp
+  - | # Prepare build
+    sudo docker exec $CONTAINER mkdir build
+    sudo docker exec $CONTAINER bash -c 'cd build && conan install ..'
+    sudo docker exec $CONTAINER bash -c 'cd build && /tmp/bin/cmake ..'
   
-  # Make the downloaded compiler default
-  - sudo ln -s /usr/bin/gcc-8 /usr/local/bin/gcc
-  - sudo ln -s /usr/bin/g++-8 /usr/local/bin/g++
-
-  # Prepare build
-  - mkdir build
-  - cd build
-  - conan install ..
-  - /tmp/bin/cmake ..
-
-script: make -j`nproc` && make test
+script:
+  - | # Build and test
+    sudo docker exec $CONTAINER bash -c 'cd build && make -j`nproc`'
+    sudo docker exec $CONTAINER bash -c 'cd build && make test'

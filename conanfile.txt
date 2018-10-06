@@ -3,3 +3,8 @@ boost/1.68.0@conan/stable
 
 [generators]
 cmake
+
+[options]
+Boost:shared=False
+Boost:header_only=False
+Boost:program_options=True

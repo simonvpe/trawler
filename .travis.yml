@@ -33,4 +33,4 @@ before_script:
 script:
   - | # Build and test
     sudo docker exec $CONTAINER bash -c 'cd build && make -j`nproc`'
-    sudo docker exec $CONTAINER bash -c 'cd build && make test'
+    # sudo docker exec $CONTAINER bash -c 'cd build && make test'

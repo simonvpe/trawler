@@ -17,11 +17,11 @@ spawn_endpoints(const std::vector<std::pair<std::string, rxcpp::observable<Servi
     const auto predicate = [endpoint_name](const auto& x) { return x.first == endpoint_name; };
     auto endpoint = create_endpoint({ endpoint_name + ".endpoint" });
 
-    const auto error_handler = [logger](auto error) {
+    const auto error_handler = [=](auto error) {
       try {
         std::rethrow_exception(error);
       } catch (const std::exception& e) {
-        logger.critical(e.what( ));
+        logger.critical("Endpoint [" + endpoint_name + "] failed with '" + e.what( ) + "'");
       }
     };
 

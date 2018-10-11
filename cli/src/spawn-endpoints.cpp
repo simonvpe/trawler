@@ -17,16 +17,24 @@ spawn_endpoints(const std::vector<std::pair<std::string, rxcpp::observable<Servi
     const auto predicate = [endpoint_name](const auto& x) { return x.first == endpoint_name; };
     auto endpoint = create_endpoint({ endpoint_name + ".endpoint" });
 
+    const auto error_handler = [logger](auto error) {
+      try {
+        std::rethrow_exception(error);
+      } catch (const std::exception& e) {
+        logger.critical(e.what( ));
+      }
+    };
+
     auto service = std::find_if(cbegin(services), cend(services), std::move(predicate));
     if (service != cend(services)) {
-      auto subscription = service->second.subscribe(std::move(endpoint));
+      auto subscription = service->second.subscribe(std::move(endpoint), error_handler);
       subscriptions.push_back(std::move(subscription));
       continue;
     }
 
     auto pipeline = std::find_if(cbegin(pipelines), cend(pipelines), std::move(predicate));
     if (pipeline != cend(pipelines)) {
-      auto subscription = pipeline->second.subscribe(std::move(endpoint));
+      auto subscription = pipeline->second.subscribe(std::move(endpoint), error_handler);
       subscriptions.push_back(std::move(subscription));
     }
   }

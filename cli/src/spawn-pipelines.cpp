@@ -44,7 +44,8 @@ make_inja_visitor(const services_t& services, pipelines_t& pipelines, const Logg
   return [&](const config::inja_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     const auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
-    auto observer = source.map(create_inja_pipeline(pipe.tmplate, { pipe.name })).as_dynamic( );
+    const auto transform = create_inja_pipeline(pipe.tmplate, { pipe.name });
+    auto observer = source.map(transform).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }
@@ -55,7 +56,8 @@ make_jq_visitor(const services_t& services, pipelines_t& pipelines, const Logger
   return [&](const config::jq_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     const auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
-    auto observer = source.flat_map(create_jq_pipeline(pipe.script, { pipe.name })).as_dynamic( );
+    const auto transform = create_jq_pipeline(pipe.script, { pipe.name });
+    auto observer = source.flat_map(transform).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }
@@ -78,7 +80,8 @@ make_emit_visitor(const services_t& services, pipelines_t& pipelines, const Logg
   return [&](const config::emit_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     const auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
-    auto observer = source.map(create_emit_pipeline(pipe.data, { pipe.name })).as_dynamic( );
+    const auto transform = create_emit_pipeline(pipe.data, { pipe.name });
+    auto observer = source.map(transform).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }
@@ -89,9 +92,10 @@ make_http_client_visitor(const services_t& services, pipelines_t& pipelines, con
   return [&](const config::http_client_pipeline_t& pipe) {
     logger.info("Creating pipeline " + pipe.pipeline + " [" + pipe.name + "]");
     const auto source = find_source(services, pipelines, pipe.source).filter(make_event_filter(pipe.event));
-    auto pipeline = pipe.ssl ? create_http_client_ssl_pipeline({ pipe.name })
-                             : create_http_client_pipeline({ pipe.name });
-    auto observer = source.map(std::move(pipeline)).as_dynamic( );
+    const auto transform = pipe.ssl
+      ? create_http_client_ssl_pipeline({ pipe.name })
+      : create_http_client_pipeline({ pipe.name });
+    auto observer = source.map(transform).as_dynamic( );
     pipelines.push_back({ pipe.name, std::move(observer) });
   };
 }
